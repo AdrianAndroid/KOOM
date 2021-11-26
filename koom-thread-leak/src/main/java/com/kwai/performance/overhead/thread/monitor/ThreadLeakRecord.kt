@@ -28,20 +28,22 @@ data class ThreadLeakRecord(
     val startTime: Long,
     val endTime: Long,
     val name: String,
-    val createCallStack: String) {
+    val createCallStack: String
+) {
 
-  override fun toString(): String = StringBuilder().apply {
-    append("tid: $tid\n")
-    append("createTime: $createTime Byte\n")
-    append("startTime: $startTime\n")
-    append("endTime: $endTime\n")
-    append("name: $name\n")
-    append("createCallStack:\n")
-    append(createCallStack)
-  }.toString()
+    override fun toString(): String = StringBuilder().apply {
+        append("tid: $tid\n")
+        append("createTime: $createTime Byte\n")
+        append("startTime: $startTime\n")
+        append("endTime: $endTime\n")
+        append("name: $name\n")
+        append("createCallStack:\n")
+        append(createCallStack)
+    }.toString()
 }
 
 @Keep
 data class ThreadLeakContainer(
     val type: String,
-    val threads: MutableList<ThreadLeakRecord>)
+    val threads: MutableList<ThreadLeakRecord>
+)

@@ -49,18 +49,19 @@ void HprofDump::Initialize() {
     return;
   }
 
+  // 动态链接，我感觉是art虚拟机
   void *handle = kwai::linker::DlFcn::dlopen("libart.so", RTLD_NOW);
   KCHECKV(handle)
 
+  // Android R以下
   if (android_api_ < __ANDROID_API_R__) {
-    suspend_vm_fnc_ =
-        (void (*)())DlFcn::dlsym(handle, "_ZN3art3Dbg9SuspendVMEv");
+    suspend_vm_fnc_ = (void (*)())DlFcn::dlsym(handle, "_ZN3art3Dbg9SuspendVMEv");
     KFINISHV_FNC(suspend_vm_fnc_, DlFcn::dlclose, handle)
 
-    resume_vm_fnc_ = (void (*)())kwai::linker::DlFcn::dlsym(
-        handle, "_ZN3art3Dbg8ResumeVMEv");
+    resume_vm_fnc_ = (void (*)())kwai::linker::DlFcn::dlsym(handle, "_ZN3art3Dbg8ResumeVMEv");
     KFINISHV_FNC(resume_vm_fnc_, DlFcn::dlclose, handle)
   }
+  // Android R
   if (android_api_ == __ANDROID_API_R__) {
     // Over size for device compatibility
     ssa_instance_ = std::make_unique<char[]>(64);
@@ -70,12 +71,10 @@ void HprofDump::Initialize() {
         handle, "_ZN3art16ScopedSuspendAllC1EPKcb");
     KFINISHV_FNC(ssa_constructor_fnc_, DlFcn::dlclose, handle)
 
-    ssa_destructor_fnc_ =
-        (void (*)(void *))DlFcn::dlsym(handle, "_ZN3art16ScopedSuspendAllD1Ev");
+    ssa_destructor_fnc_ = (void (*)(void *))DlFcn::dlsym(handle, "_ZN3art16ScopedSuspendAllD1Ev");
     KFINISHV_FNC(ssa_destructor_fnc_, DlFcn::dlclose, handle)
 
-    sgc_constructor_fnc_ =
-        (void (*)(void *, void *, GcCause, CollectorType))DlFcn::dlsym(
+    sgc_constructor_fnc_ = (void (*)(void *, void *, GcCause, CollectorType))DlFcn::dlsym(
             handle,
             "_ZN3art2gc23ScopedGCCriticalSectionC1EPNS_6ThreadENS0_"
             "7GcCauseENS0_13CollectorTypeE");
@@ -105,7 +104,7 @@ pid_t HprofDump::SuspendAndFork() {
   KCHECKI(init_done_)
 
   if (android_api_ < __ANDROID_API_R__) {
-    suspend_vm_fnc_();
+    suspend_vm_fnc_(); // 挂起虚拟机
   }
   if (android_api_ == __ANDROID_API_R__) {
     void *self = __get_tls()[TLS_SLOT_ART_THREAD_SELF];

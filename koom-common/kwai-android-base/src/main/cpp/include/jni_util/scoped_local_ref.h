@@ -21,48 +21,49 @@
 
 #include <jni.h>
 
-template <typename T>
+template<typename T>
 class ScopedLocalRef {
- public:
-  ScopedLocalRef(JNIEnv *env, T local_ref) : env_(env), local_ref_(local_ref) {}
+public:
+    ScopedLocalRef(JNIEnv *env, T local_ref) : env_(env), local_ref_(local_ref) {}
 
-  ScopedLocalRef(ScopedLocalRef &&s) : env_(s.env_), local_ref_(s.release()) {}
+    ScopedLocalRef(ScopedLocalRef &&s) : env_(s.env_), local_ref_(s.release()) {}
 
-  ScopedLocalRef &operator=(ScopedLocalRef &&s) noexcept {
-    reset(s.release());
-    env_ = s.env_;
-    return *this;
-  }
-
-  explicit ScopedLocalRef(JNIEnv *env) : env_(env), local_ref_(nullptr) {}
-
-  ~ScopedLocalRef() { reset(); }
-
-  void reset(T ptr = nullptr) {
-    if (ptr != local_ref_) {
-      if (local_ref_) {
-        env_->DeleteLocalRef(local_ref_);
-      }
-      local_ref_ = ptr;
+    ScopedLocalRef &operator=(ScopedLocalRef &&s) noexcept {
+        reset(s.release());
+        env_ = s.env_;
+        return *this;
     }
-  }
 
-  T release() __attribute__((warn_unused_result)) {
-    T local_ref = local_ref_;
-    local_ref_ = nullptr;
-    return local_ref;
-  }
+    explicit ScopedLocalRef(JNIEnv *env) : env_(env), local_ref_(nullptr) {}
 
-  T get() const { return local_ref_; }
+    ~ScopedLocalRef() { reset(); }
 
-  bool operator==(std::nullptr_t) const { return local_ref_ == nullptr; }
+    void reset(T ptr = nullptr) {
+        if (ptr != local_ref_) {
+            if (local_ref_) {
+                env_->DeleteLocalRef(local_ref_);
+            }
+            local_ref_ = ptr;
+        }
+    }
 
-  bool operator!=(std::nullptr_t) const { return local_ref_ != nullptr; }
+    T release() __attribute__((warn_unused_result)) {
+        T local_ref = local_ref_;
+        local_ref_ = nullptr;
+        return local_ref;
+    }
 
- private:
-  ScopedLocalRef(const ScopedLocalRef &) = delete;
-  void operator=(ScopedLocalRef &) = delete;
+    T get() const { return local_ref_; }
 
-  JNIEnv *env_;
-  T local_ref_;
+    bool operator==(std::nullptr_t) const { return local_ref_ == nullptr; }
+
+    bool operator!=(std::nullptr_t) const { return local_ref_ != nullptr; }
+
+private:
+    ScopedLocalRef(const ScopedLocalRef &) = delete;
+
+    void operator=(ScopedLocalRef &) = delete;
+
+    JNIEnv *env_;
+    T local_ref_;
 };

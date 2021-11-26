@@ -52,7 +52,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.novoda:bintray-release:0.9'
-        classpath deps.kotlin.gradlePlugin
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
         classpath deps.androidGradlePlugin
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.4.10.2"
     }

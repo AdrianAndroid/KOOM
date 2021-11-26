@@ -25,61 +25,62 @@ import com.kwai.koom.javaoom.hprof.HeapDumper
 import com.kwai.koom.javaoom.hprof.StandardHeapDumper
 import com.kwai.koom.javaoom.hprof.StripHprofHeapDumper
 import com.kwai.koom.javaoom.monitor.utils.SizeUnit
-import java.util.*
+import java.util.Date
 
 object OOMHeapDumper {
-  private const val TAG = "OOMHeapDumper"
+    private const val TAG = "OOMHeapDumper"
 
-  private fun dump(dumper: HeapDumper) {
-    try {
-      MonitorLog.i(TAG, "dump hprof start")
+    private fun dump(dumper: HeapDumper) {
+        try {
+            MonitorLog.i(TAG, "dump hprof start")
 
-      val hprofFile = OOMFileManager.createHprofOOMDumpFile(Date())
+            val hprofFile = OOMFileManager.createHprofOOMDumpFile(Date())
 
-      val start = System.currentTimeMillis()
+            val start = System.currentTimeMillis()
 
-      hprofFile.createNewFile()
-      dumper.dump(hprofFile.absolutePath)
+            hprofFile.createNewFile()
+            dumper.dump(hprofFile.absolutePath)
 
-      val end = System.currentTimeMillis()
+            val end = System.currentTimeMillis()
 
-      MonitorLog.i(TAG, "dump hprof complete," +
-          " dumpTime:" + (end - start) +
-          " fileName:" + hprofFile.name +
-          " origin fileSize:" + SizeUnit.BYTE.toMB(hprofFile.length()) +
-          " JVM max memory:" + SizeUnit.BYTE.toMB(Runtime.getRuntime().maxMemory()) +
-          " JVM  free memory:" + SizeUnit.BYTE.toMB(Runtime.getRuntime().freeMemory()) +
-          " JVM total memory:" + SizeUnit.BYTE.toMB(Runtime.getRuntime().totalMemory()), true)
-    } catch (e: Throwable) {
-      e.printStackTrace()
+            MonitorLog.i(
+                TAG, "dump hprof complete," +
+                    " dumpTime:" + (end - start) +
+                    " fileName:" + hprofFile.name +
+                    " origin fileSize:" + SizeUnit.BYTE.toMB(hprofFile.length()) +
+                    " JVM max memory:" + SizeUnit.BYTE.toMB(Runtime.getRuntime().maxMemory()) +
+                    " JVM  free memory:" + SizeUnit.BYTE.toMB(Runtime.getRuntime().freeMemory()) +
+                    " JVM total memory:" + SizeUnit.BYTE.toMB(Runtime.getRuntime().totalMemory()), true
+            )
+        } catch (e: Throwable) {
+            e.printStackTrace()
 
-      MonitorLog.i(TAG, "dumpStripHprof failed: ${e.message}")
+            MonitorLog.i(TAG, "dumpStripHprof failed: ${e.message}")
+        }
     }
-  }
 
-  @JvmStatic
-  fun simpleDump() {
-    MonitorLog.i(TAG, "simpleDump")
-    dump(StandardHeapDumper())
-  }
+    @JvmStatic
+    fun simpleDump() {
+        MonitorLog.i(TAG, "simpleDump")
+        dump(StandardHeapDumper())
+    }
 
-  @JvmStatic
-  fun forkDump() {
-    MonitorLog.i(TAG, "forkDump")
-    dump(ForkJvmHeapDumper())
-  }
+    @JvmStatic
+    fun forkDump() {
+        MonitorLog.i(TAG, "forkDump")
+        dump(ForkJvmHeapDumper())
+    }
 
-  @JvmStatic
-  fun stripDump() {
-    MonitorLog.i(TAG, "dumpStripHprof")
-    dump(StripHprofHeapDumper())
-  }
+    @JvmStatic
+    fun stripDump() {
+        MonitorLog.i(TAG, "dumpStripHprof")
+        dump(StripHprofHeapDumper())
+    }
 
-  @JvmStatic
-  fun forkDumpStrip() {
-    MonitorLog.i(TAG, "forkDumpStrip")
+    @JvmStatic
+    fun forkDumpStrip() {
+        MonitorLog.i(TAG, "forkDumpStrip")
 
-    dump(ForkStripHeapDumper())
-  }
-
+        dump(ForkStripHeapDumper())
+    }
 }

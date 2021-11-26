@@ -27,6 +27,7 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+// 外部类中持有非静态内部里的静态对象
 public class ActivityLeakMaker extends LeakMaker<Activity> {
 
   @Override
