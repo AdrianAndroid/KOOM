@@ -22,12 +22,12 @@ import java.io.File
 
 interface OOMHprofUploader {
 
-  enum class HprofType {
-    ORIGIN, STRIPPED
-  }
+    enum class HprofType {
+        ORIGIN, STRIPPED
+    }
 
-  /**
-   * 注意：外部调用完upload后，切记自行删除
-   */
-  fun upload(file: File, type: HprofType)
+    /**
+     * 注意：外部调用完upload后，切记自行删除
+     */
+    fun upload(file: File, type: HprofType)
 }

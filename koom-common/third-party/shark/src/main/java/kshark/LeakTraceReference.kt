@@ -14,49 +14,49 @@ import java.io.Serializable
  * [LeakTrace.referencePath].
  */
 data class LeakTraceReference(
-  val originObject: LeakTraceObject,
+    val originObject: LeakTraceObject,
 
-  val referenceType: ReferenceType,
+    val referenceType: ReferenceType,
 
-  val owningClassName: String,
+    val owningClassName: String,
 
-  val referenceName: String
+    val referenceName: String
 
 ) : Serializable {
 
-  enum class ReferenceType {
-    INSTANCE_FIELD,
-    STATIC_FIELD,
-    LOCAL,
-    ARRAY_ENTRY
-  }
-
-  /**
-   * Returns {@link #className} without the package, ie stripped of any string content before the
-   * last period (included).
-   */
-  val owningClassSimpleName: String get() = owningClassName.lastSegment('.')
-
-  val referenceDisplayName: String
-    get() {
-      return when (referenceType) {
-        ARRAY_ENTRY -> "[$referenceName]"
-        STATIC_FIELD, INSTANCE_FIELD -> referenceName
-        LOCAL -> "<Java Local>"
-      }
+    enum class ReferenceType {
+        INSTANCE_FIELD,
+        STATIC_FIELD,
+        LOCAL,
+        ARRAY_ENTRY
     }
 
-  val referenceGenericName: String
-    get() {
-      return when (referenceType) {
-        // The specific array index in a leak rarely matters, this improves grouping.
-        ARRAY_ENTRY -> "[x]"
-        STATIC_FIELD, INSTANCE_FIELD -> referenceName
-        LOCAL -> "<Java Local>"
-      }
-    }
+    /**
+     * Returns {@link #className} without the package, ie stripped of any string content before the
+     * last period (included).
+     */
+    val owningClassSimpleName: String get() = owningClassName.lastSegment('.')
 
-  companion object {
-    private const val serialVersionUID = 1L
-  }
+    val referenceDisplayName: String
+        get() {
+            return when (referenceType) {
+                ARRAY_ENTRY -> "[$referenceName]"
+                STATIC_FIELD, INSTANCE_FIELD -> referenceName
+                LOCAL -> "<Java Local>"
+            }
+        }
+
+    val referenceGenericName: String
+        get() {
+            return when (referenceType) {
+                // The specific array index in a leak rarely matters, this improves grouping.
+                ARRAY_ENTRY -> "[x]"
+                STATIC_FIELD, INSTANCE_FIELD -> referenceName
+                LOCAL -> "<Java Local>"
+            }
+        }
+
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }

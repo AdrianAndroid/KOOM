@@ -27,82 +27,83 @@ import com.kwai.koom.base.loadSoQuietly
 import com.kwai.koom.base.loop.LoopMonitor
 
 object ThreadMonitor : LoopMonitor<ThreadMonitorConfig>() {
-  private const val TAG = "koom-thread-monitor"
+    private const val TAG = "koom-thread-monitor"
 
-  @Volatile
-  private var mIsRunning = false
+    @Volatile
+    private var mIsRunning = false
 
-  private val mGon by lazy { Gson() }
+    private val mGon by lazy { Gson() }
 
-  fun startTrack() {
-    if (handleNativeInit()) {
-      mIsRunning = true
-      startLoop(clearQueue = true, postAtFront = false, delayMillis = monitorConfig.startDelay)
+    fun startTrack() {
+        if (handleNativeInit()) {
+            mIsRunning = true
+            startLoop(clearQueue = true, postAtFront = false, delayMillis = monitorConfig.startDelay)
+        }
     }
-  }
 
-  fun startTrackAsync() {
-    getLoopHandler().postAtFrontOfQueue {
-      startTrack()
+    fun startTrackAsync() {
+        getLoopHandler().postAtFrontOfQueue {
+            startTrack()
+        }
     }
-  }
 
-  fun stop() {
-    if (mIsRunning) {
-      NativeHandler.stop()
+    fun stop() {
+        if (mIsRunning) {
+            NativeHandler.stop()
+        }
+        stopLoop()
     }
-    stopLoop()
-  }
 
-  override fun call(): LoopState {
-    handleThreadLeak()
-    return LoopState.Continue
-  }
+    override fun call(): LoopState {
+        handleThreadLeak()
+        return LoopState.Continue
+    }
 
-  override fun getLoopInterval() = monitorConfig.loopInterval
+    override fun getLoopInterval() = monitorConfig.loopInterval
 
-  private fun handleThreadLeak() {
-    NativeHandler.refresh()
-  }
+    private fun handleThreadLeak() {
+        NativeHandler.refresh()
+    }
 
-  private fun handleNativeInit(): Boolean {
-    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O || Build.VERSION.SDK_INT > Build
-            .VERSION_CODES.R) {
-      monitorConfig.listener?.onError("not support P below or R above now!")
-      return false
+    private fun handleNativeInit(): Boolean {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O || Build.VERSION.SDK_INT > Build
+                .VERSION_CODES.R
+        ) {
+            monitorConfig.listener?.onError("not support P below or R above now!")
+            return false
+        }
+        if (!isArm64()) {
+            monitorConfig.listener?.onError("support arm64 only!")
+            return false
+        }
+        if (loadSoQuietly("koom-thread")) {
+            MonitorLog.i(TAG, "loadLibrary success")
+        } else {
+            monitorConfig.listener?.onError("loadLibrary fail")
+            return false
+        }
+        if (monitorConfig.disableNativeStack) {
+            NativeHandler.disableNativeStack()
+        }
+        if (monitorConfig.disableJavaStack) {
+            NativeHandler.disableJavaStack()
+        }
+        if (monitorConfig.enableNativeLog) {
+            NativeHandler.enableNativeLog()
+        }
+        NativeHandler.setThreadLeakDelay(monitorConfig.threadLeakDelay)
+        NativeHandler.start()
+        MonitorLog.i(TAG, "init finish")
+        return true
     }
-    if (!isArm64()) {
-      monitorConfig.listener?.onError("support arm64 only!")
-      return false
-    }
-    if (loadSoQuietly("koom-thread")) {
-      MonitorLog.i(TAG, "loadLibrary success")
-    } else {
-      monitorConfig.listener?.onError("loadLibrary fail")
-      return false
-    }
-    if (monitorConfig.disableNativeStack) {
-      NativeHandler.disableNativeStack()
-    }
-    if (monitorConfig.disableJavaStack) {
-      NativeHandler.disableJavaStack()
-    }
-    if (monitorConfig.enableNativeLog) {
-      NativeHandler.enableNativeLog()
-    }
-    NativeHandler.setThreadLeakDelay(monitorConfig.threadLeakDelay)
-    NativeHandler.start()
-    MonitorLog.i(TAG, "init finish")
-    return true
-  }
 
-  fun nativeReport(resultJson: String) {
-    mGon.fromJson(resultJson, ThreadLeakContainer::class.java).let {
-      monitorConfig.listener?.onReport(it.threads)
+    fun nativeReport(resultJson: String) {
+        mGon.fromJson(resultJson, ThreadLeakContainer::class.java).let {
+            monitorConfig.listener?.onReport(it.threads)
+        }
     }
-  }
 
-  fun setListener(listener: ThreadLeakListener) {
-    monitorConfig.listener = listener
-  }
+    fun setListener(listener: ThreadLeakListener) {
+        monitorConfig.listener = listener
+    }
 }
