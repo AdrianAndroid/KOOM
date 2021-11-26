@@ -240,20 +240,21 @@ object OOMMonitor : LoopMonitor<OOMMonitorConfig>(), LifecycleEventObserver {
         jsonFile: File,
         reason: String
     ) {
+        // 文件为空，不分析
         if (hprofFile.length() == 0L) {
             hprofFile.delete()
             MonitorLog.i(TAG, "hprof file size 0", true)
             return
         }
-
+        // 不再前台，不分析
         if (!getApplication().isForeground) {
             MonitorLog.e(TAG, "try startAnalysisService, but not foreground")
             mForegroundPendingRunnables.add(Runnable { startAnalysisService(hprofFile, jsonFile, reason) })
             return
         }
-
+        // 记录分析时间
         OOMPreferenceManager.increaseAnalysisTimes()
-
+        // 传递数据用
         val extraData = AnalysisExtraData().apply {
             this.reason = reason
             this.currentPage = getApplication().currentActivity?.localClassName.orEmpty()
