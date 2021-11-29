@@ -99,12 +99,15 @@ object OOMMonitor : LoopMonitor<OOMMonitorConfig>(), LifecycleEventObserver {
 
         MonitorLog.i(TAG, "startLoop()")
 
+        // 检查是否开始初始化
         if (mIsLoopStarted) {
             return
         }
         mIsLoopStarted = true
 
+        // 开启循环
         super.startLoop(clearQueue, postAtFront, delayMillis)
+        // 处理旧的文件
         getLoopHandler().postDelayed({ async { processOldHprofFile() } }, delayMillis) // 异步处理
     }
 

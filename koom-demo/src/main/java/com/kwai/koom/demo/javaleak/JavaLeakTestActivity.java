@@ -49,7 +49,7 @@ public class JavaLeakTestActivity extends AppCompatActivity {
             case R.id.btn_hprof_dump:
                 showHprofDumpHint();
 
-                //Pull the hprof from the devices.
+                //Pul l the hprof from the devices.
                 //adb shell "run-as com.kwai.koom.demo cat 'files/test.hprof'" > ~/temp/test.hprof
                 new ForkStripHeapDumper().dump(
                     this.getFilesDir().getAbsolutePath() + File.separator + "test.hprof");

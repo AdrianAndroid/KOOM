@@ -162,9 +162,11 @@ object LeakMonitor : LoopMonitor<LeakMonitorConfig>() {
             }
             mutableMapOf<String, LeakRecord>()
                 .apply { nativeGetLeakAllocs(this) }
-                .also { AllocationTagLifecycleCallbacks.bindAllocationTag(it) }
-                .also { MonitorLog.i(TAG, "LeakRecordMap size: ${it.size}") }
-                .also { monitorConfig.leakListener.onLeak(it.values) }
+                .also { it: MutableMap<String, LeakRecord> -> AllocationTagLifecycleCallbacks.bindAllocationTag(it) }
+                .also { it: MutableMap<String, LeakRecord> -> MonitorLog.i(TAG, "LeakRecordMap size: ${it.size}") }
+                .also { it: MutableMap<String, LeakRecord> ->
+                    monitorConfig.leakListener.onLeak(it.values)
+                }
         })
     }
 

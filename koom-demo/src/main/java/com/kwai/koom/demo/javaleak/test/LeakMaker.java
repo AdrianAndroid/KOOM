@@ -30,6 +30,7 @@ public abstract class LeakMaker<T> {
 
   private static List<LeakMaker> leakMakerList = new ArrayList<>();
 
+  // 制作内存泄漏
   public static void makeLeak(Context context) {
     leakMakerList.add(new ActivityLeakMaker());
     leakMakerList.add(new BitmapLeakMaker());
