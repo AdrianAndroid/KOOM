@@ -21,35 +21,22 @@
 package com.kwai.koom.javaoom.monitor.analysis
 
 import android.app.IntentService
-
 import android.content.Context
 import android.content.Intent
-
 import android.os.Build
 import android.os.Debug
 import android.os.ResultReceiver
-
-import java.io.File
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.*
-
-import kotlin.system.measureTimeMillis
-
 import com.google.gson.Gson
-
 import com.kwai.koom.base.MonitorLog
-
 import com.kwai.koom.javaoom.monitor.OOMFileManager
 import com.kwai.koom.javaoom.monitor.OOMFileManager.createDumpFile
 import com.kwai.koom.javaoom.monitor.OOMFileManager.fdDumpDir
 import com.kwai.koom.javaoom.monitor.OOMFileManager.threadDumpDir
-import com.kwai.koom.javaoom.monitor.utils.SizeUnit.BYTE
-import com.kwai.koom.javaoom.monitor.utils.SizeUnit.KB
 import com.kwai.koom.javaoom.monitor.tracker.model.SystemInfo.javaHeap
 import com.kwai.koom.javaoom.monitor.tracker.model.SystemInfo.memInfo
 import com.kwai.koom.javaoom.monitor.tracker.model.SystemInfo.procStatus
-
+import com.kwai.koom.javaoom.monitor.utils.SizeUnit.BYTE
+import com.kwai.koom.javaoom.monitor.utils.SizeUnit.KB
 import kshark.AndroidReferenceMatchers
 import kshark.HeapAnalyzer
 import kshark.HeapAnalyzer.FindLeakInput
@@ -58,6 +45,12 @@ import kshark.HprofHeapGraph.Companion.openHeapGraph
 import kshark.HprofRecordTag
 import kshark.OnAnalysisProgressListener
 import kshark.SharkLog
+import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlin.system.measureTimeMillis
 
 class HeapAnalysisService : IntentService("HeapAnalysisService") {
     companion object {
@@ -193,6 +186,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
         OOMFileManager.init(rootPath)
 
         kotlin.runCatching {
+            // 解析hprof文件
             buildIndex(hprofFile)
         }.onFailure {
             it.printStackTrace()
@@ -201,9 +195,11 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
             return
         }
 
+        // 只是创建一个文件
         buildJson(intent)
 
         kotlin.runCatching {
+            // 筛选出内存泄漏的对象
             filterLeakingObjects()
         }.onFailure {
             MonitorLog.i(OOM_ANALYSIS_EXCEPTION_TAG, "find leak objects exception " + it.message, true)
@@ -212,6 +208,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
         }
 
         kotlin.runCatching {
+            //
             findPathsToGcRoot()
         }.onFailure {
             it.printStackTrace()
@@ -283,7 +280,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
             nowTime = intent?.getStringExtra(Info.TIME)
 
             deviceMemTotal = intent?.getStringExtra(Info.DEVICE_MAX_MEM)
-          deviceMemAvaliable = intent?.getStringExtra(Info.DEVICE_AVA_MEM)
+            deviceMemAvaliable = intent?.getStringExtra(Info.DEVICE_AVA_MEM)
 
             dumpReason = intent?.getStringExtra(Info.REASON)
 
@@ -329,6 +326,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
         val startTime = System.currentTimeMillis()
         MonitorLog.i(TAG, "filterLeakingObjects " + Thread.currentThread())
 
+        // 各种内存泄漏的点
         val activityHeapClass = mHeapGraph.findClassByName(ACTIVITY_CLASS_NAME)
         val fragmentHeapClass = mHeapGraph.findClassByName(ANDROIDX_FRAGMENT_CLASS_NAME)
             ?: mHeapGraph.findClassByName(NATIVE_FRAGMENT_CLASS_NAME)
@@ -617,7 +615,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
             OOM_ANALYSIS_TAG,
             "----------------------------Library Leak--------------------------------------"
         )
-      //填充library leak
+        //填充library leak
         MonitorLog.i(OOM_ANALYSIS_TAG, "LibraryLeak size:" + libraryLeaks.size)
         for (libraryLeak in libraryLeaks) {
             MonitorLog.i(

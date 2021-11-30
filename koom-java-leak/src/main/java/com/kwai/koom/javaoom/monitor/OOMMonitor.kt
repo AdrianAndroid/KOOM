@@ -313,6 +313,7 @@ object OOMMonitor : LoopMonitor<OOMMonitorConfig>(), LifecycleEventObserver {
 
             MonitorLog.i(TAG, "hprof analysis dir:$hprofAnalysisDir")
 
+            // 开启新进程， 阻塞当前进程， 并dump
             ForkJvmHeapDumper().run {
                 dump(hprofFile.absolutePath)
             }
@@ -321,6 +322,7 @@ object OOMMonitor : LoopMonitor<OOMMonitorConfig>(), LifecycleEventObserver {
             Thread.sleep(1000) // make sure file synced to disk.
             MonitorLog.i(TAG, "start hprof analysis")
 
+            // 开始分析堆存储文件，并解析成json
             startAnalysisService(hprofFile, jsonFile, mTrackReasons.joinToString())
         }.onFailure {
             it.printStackTrace()

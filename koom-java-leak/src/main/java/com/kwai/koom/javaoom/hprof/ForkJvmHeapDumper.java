@@ -34,7 +34,7 @@ public class ForkJvmHeapDumper extends HeapDumper {
   public ForkJvmHeapDumper() {
     super();
     if (soLoaded) {
-      init();
+      init(); // 打开系统的库函数
     }
   }
 
@@ -55,6 +55,15 @@ public class ForkJvmHeapDumper extends HeapDumper {
     boolean dumpRes = false;
     try {
       MonitorLog.i(TAG, "before suspend and fork.");
+      // 创建子进程
+      // pid返回值
+      //  1。 返回子进程id给父进程：
+      //         因为一个进程的子进程可能有多个，并且没有一个函数可以获得一个进程的所有子进程
+      //  2。 返回给子进程值为0：
+      //         一个进程只会有一个，所以子进程松狮可以调用getid以获得当前进程id以调用getid获得父进程id
+      //  3。 出现错误，返回负值：
+      //         当前进程数已经达到系统规定的上限，这是errno的值被设置为EAGAIN
+      //         系统内存不足，这时errno的值被设置为ENOMEM
       int pid = suspendAndFork();
       if (pid == 0) {
         // Child process
@@ -72,8 +81,28 @@ public class ForkJvmHeapDumper extends HeapDumper {
     return dumpRes;
   }
 
+  // ---->https://www.jianshu.com/p/586300fdb1ce<----
+  // int main(int argc, char *argv[]) {
+  //   pid_t pid;
+  //   int count = 0;
+  //   //获得当前进程ID
+  //   printf("Current Process Id = %d\n", getpid());
+  //   if ((pid == fork()) < 0) {
+  //     print("异常退出")；
+  //   } else if(pid == 0) {
+  //     count++;
+  //     printf("进程子进程，当前进程curretPid=%d, 父进程parentPid=%d\n", getpid(), getppid())
+  //   } else {
+  //     count++;
+  //     printf("当前进程 currentPid = %d, Count = %d\n", getpid(), count);
+  //   }
+  //   printf("当前进程 currentPid = %d, Count = %d\n", getpid(), count);
+  //   return 0
+  // }
+
   /**
    * Init before do dump.
+   * // 打开系统的库函数
    */
   private native void init();
 

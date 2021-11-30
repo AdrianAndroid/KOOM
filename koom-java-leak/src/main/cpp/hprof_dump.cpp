@@ -49,9 +49,11 @@ void HprofDump::Initialize() {
     return;
   }
 
+  // 动态链接，我感觉是art虚拟机
   void *handle = kwai::linker::DlFcn::dlopen("libart.so", RTLD_NOW);
   KCHECKV(handle)
 
+  // Android R以下
   if (android_api_ < __ANDROID_API_R__) {
     suspend_vm_fnc_ =
         (void (*)())DlFcn::dlsym(handle, "_ZN3art3Dbg9SuspendVMEv");
@@ -61,6 +63,7 @@ void HprofDump::Initialize() {
         handle, "_ZN3art3Dbg8ResumeVMEv");
     KFINISHV_FNC(resume_vm_fnc_, DlFcn::dlclose, handle)
   }
+  // Android R
   if (android_api_ == __ANDROID_API_R__) {
     // Over size for device compatibility
     ssa_instance_ = std::make_unique<char[]>(64);
@@ -105,7 +108,7 @@ pid_t HprofDump::SuspendAndFork() {
   KCHECKI(init_done_)
 
   if (android_api_ < __ANDROID_API_R__) {
-    suspend_vm_fnc_();
+    suspend_vm_fnc_(); // 挂起虚拟机
   }
   if (android_api_ == __ANDROID_API_R__) {
     void *self = __get_tls()[TLS_SLOT_ART_THREAD_SELF];
