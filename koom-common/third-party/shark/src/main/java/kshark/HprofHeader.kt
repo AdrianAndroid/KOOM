@@ -49,6 +49,7 @@ data class HprofHeader(
          * This does not close the [source].
          */
         fun parseHeaderOf(source: BufferedSource): HprofHeader {
+            // 前置条件的检查
             require(!source.exhausted()) {
                 throw IllegalArgumentException("Source has no available bytes")
             }
@@ -56,6 +57,7 @@ data class HprofHeader(
             val versionName = source.readUtf8(endOfVersionString)
 
             val version = supportedVersions[versionName]
+            // 中间的检查
             checkNotNull(version) {
                 "Unsupported Hprof version [$versionName] not in supported list ${supportedVersions.keys}"
             }
@@ -65,9 +67,5 @@ data class HprofHeader(
             val heapDumpTimestamp = source.readLong()
             return HprofHeader(heapDumpTimestamp, version, identifierByteSize)
         }
-    }
-
-    override fun toString(): String {
-        return "HprofHeader(heapDumpTimestamp=$heapDumpTimestamp, version=$version, identifierByteSize=$identifierByteSize, recordsPosition=$recordsPosition)"
     }
 }

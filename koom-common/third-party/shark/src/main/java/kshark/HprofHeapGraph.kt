@@ -45,6 +45,7 @@ import kshark.internal.IndexedObject.IndexedInstance
 import kshark.internal.IndexedObject.IndexedObjectArray
 import kshark.internal.IndexedObject.IndexedPrimitiveArray
 import kshark.internal.LruCache
+import okio.BufferedSource
 import java.io.File
 import kotlin.reflect.KClass
 
@@ -406,7 +407,7 @@ class HprofHeapGraph internal constructor(
             proguardMapping: ProguardMapping? = null,
             indexedGcRootTypes: Set<HprofRecordTag> = HprofIndex.defaultIndexedGcRootTags()
         ): CloseableHeapGraph {
-            val header: HprofHeader = openStreamingSource().use { HprofHeader.parseHeaderOf(it) }
+            val header: HprofHeader = openStreamingSource().use { it: BufferedSource -> HprofHeader.parseHeaderOf(it) }
             val index: HprofIndex = HprofIndex.indexRecordsOf(this, header, proguardMapping, indexedGcRootTypes)
             return index.openHeapGraph()
         }
