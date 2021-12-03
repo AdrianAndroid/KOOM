@@ -353,4 +353,8 @@ internal class LongObjectScatterMap<T> {
         values[gapSlot] = null
         assigned--
     }
+
+    override fun toString(): String {
+        return "LongObjectScatterMap(values=${values.contentToString()}, assigned=$assigned, mask=$mask, hasEmptyKey=$hasEmptyKey, loadFactor=$loadFactor)"
+    }
 }

@@ -78,4 +78,8 @@ internal class SortedBytesMap(
             sortedEntries.readInt(keyIndex).toLong()
         }
     }
+
+    override fun toString(): String {
+        return "SortedBytesMap(longIdentifiers=$longIdentifiers, bytesPerValue=$bytesPerValue, bytesPerKey=$bytesPerKey, bytesPerEntry=$bytesPerEntry, size=$size)"
+    }
 }

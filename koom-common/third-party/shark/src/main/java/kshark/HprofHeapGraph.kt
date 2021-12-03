@@ -20,6 +20,7 @@ import kshark.HeapObject.HeapClass
 import kshark.HeapObject.HeapInstance
 import kshark.HeapObject.HeapObjectArray
 import kshark.HeapObject.HeapPrimitiveArray
+import kshark.HprofHeapGraph.Companion.openHeapGraph
 import kshark.HprofRecord.HeapDumpRecord.ObjectRecord
 import kshark.HprofRecord.HeapDumpRecord.ObjectRecord.ClassDumpRecord
 import kshark.HprofRecord.HeapDumpRecord.ObjectRecord.ClassDumpRecord.FieldRecord
@@ -370,6 +371,10 @@ class HprofHeapGraph internal constructor(
             }
             is IndexedPrimitiveArray -> HeapPrimitiveArray(this, indexedObject, objectId, objectIndex)
         }
+    }
+
+    override fun toString(): String {
+        return "HprofHeapGraph(header=$header, reader=$reader, index=$index, identifierByteSize=$identifierByteSize, context=$context, objectCount=$objectCount, classCount=$classCount, instanceCount=$instanceCount, objectArrayCount=$objectArrayCount, primitiveArrayCount=$primitiveArrayCount, gcRoots=$gcRoots, objects=$objects, classes=$classes, instances=$instances, objectArrays=$objectArrays, primitiveArrays=$primitiveArrays, objectCache=$objectCache, javaLangObjectClass=$javaLangObjectClass, classMap=$classMap)"
     }
 
     companion object {

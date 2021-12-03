@@ -52,6 +52,10 @@ class RandomAccessHprofReader private constructor(
         source.close()
     }
 
+    override fun toString(): String {
+        return "RandomAccessHprofReader(source=$source, buffer=$buffer, reader=$reader)"
+    }
+
     companion object {
 
         fun openReaderFor(
@@ -70,4 +74,6 @@ class RandomAccessHprofReader private constructor(
             return RandomAccessHprofReader(hprofSourceProvider.openRandomAccessSource(), hprofHeader)
         }
     }
+
+
 }

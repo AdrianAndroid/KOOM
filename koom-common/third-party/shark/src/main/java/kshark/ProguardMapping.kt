@@ -37,4 +37,8 @@ class ProguardMapping {
     ) {
         obfuscatedToClearNamesMap[obfuscatedName] = clearName
     }
+
+    override fun toString(): String {
+        return "ProguardMapping(obfuscatedToClearNamesMap=$obfuscatedToClearNamesMap)"
+    }
 }

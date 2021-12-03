@@ -41,6 +41,7 @@ import kshark.AndroidReferenceMatchers
 import kshark.HeapAnalyzer
 import kshark.HeapAnalyzer.FindLeakInput
 import kshark.HeapGraph
+import kshark.HeapObject
 import kshark.HprofHeapGraph.Companion.openHeapGraph
 import kshark.HprofRecordTag
 import kshark.OnAnalysisProgressListener
@@ -48,6 +49,7 @@ import kshark.SharkLog
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
+import java.util.ArrayList
 import java.util.Date
 import java.util.Locale
 import kotlin.system.measureTimeMillis
@@ -256,6 +258,10 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
                 )
             )
         }.also {
+            MonitorLog.i(TAG, "build index cost time: $mHeapGraph")
+            //val file = File("/sdcard/Android/data/com.kwai.koom.demo/cache/heapgraph.txt")
+            //file.writeText(mHeapGraph.toString())
+
             MonitorLog.i(TAG, "build index cost time: $it")
         }
     }
@@ -327,14 +333,15 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
         MonitorLog.i(TAG, "filterLeakingObjects " + Thread.currentThread())
 
         // 各种内存泄漏的点
-        val activityHeapClass = mHeapGraph.findClassByName(ACTIVITY_CLASS_NAME)
-        val fragmentHeapClass = mHeapGraph.findClassByName(ANDROIDX_FRAGMENT_CLASS_NAME)
+        val activityHeapClass: HeapObject.HeapClass? = mHeapGraph.findClassByName(ACTIVITY_CLASS_NAME)
+        val fragmentHeapClass: HeapObject.HeapClass? = mHeapGraph.findClassByName(ANDROIDX_FRAGMENT_CLASS_NAME)
             ?: mHeapGraph.findClassByName(NATIVE_FRAGMENT_CLASS_NAME)
             ?: mHeapGraph.findClassByName(SUPPORT_FRAGMENT_CLASS_NAME)
-        val bitmapHeapClass = mHeapGraph.findClassByName(BITMAP_CLASS_NAME)
-        val nativeAllocationHeapClass = mHeapGraph.findClassByName(NATIVE_ALLOCATION_CLASS_NAME)
-        val nativeAllocationThunkHeapClass = mHeapGraph.findClassByName(NATIVE_ALLOCATION_CLEANER_THUNK_CLASS_NAME)
-        val windowClass = mHeapGraph.findClassByName(WINDOW_CLASS_NAME)
+        val bitmapHeapClass: HeapObject.HeapClass? = mHeapGraph.findClassByName(BITMAP_CLASS_NAME)
+        val nativeAllocationHeapClass: HeapObject.HeapClass? = mHeapGraph.findClassByName(NATIVE_ALLOCATION_CLASS_NAME)
+        val nativeAllocationThunkHeapClass: HeapObject.HeapClass? =
+            mHeapGraph.findClassByName(NATIVE_ALLOCATION_CLEANER_THUNK_CLASS_NAME)
+        val windowClass: HeapObject.HeapClass? = mHeapGraph.findClassByName(WINDOW_CLASS_NAME)
 
         //缓存classHierarchy，用于查找class的所有instance
         val classHierarchyMap = mutableMapOf<Long, Pair<Long, Long>>()

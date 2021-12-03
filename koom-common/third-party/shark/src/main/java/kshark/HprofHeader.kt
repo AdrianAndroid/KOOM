@@ -66,4 +66,8 @@ data class HprofHeader(
             return HprofHeader(heapDumpTimestamp, version, identifierByteSize)
         }
     }
+
+    override fun toString(): String {
+        return "HprofHeader(heapDumpTimestamp=$heapDumpTimestamp, version=$version, identifierByteSize=$identifierByteSize, recordsPosition=$recordsPosition)"
+    }
 }

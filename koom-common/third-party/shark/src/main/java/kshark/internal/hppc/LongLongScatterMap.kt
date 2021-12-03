@@ -407,4 +407,8 @@ internal class LongLongScatterMap constructor(expectedElements: Int = 4) {
         values[gapSlot] = 0L
         assigned--
     }
+
+    override fun toString(): String {
+        return "LongLongScatterMap(assigned=$assigned, mask=$mask, hasEmptyKey=$hasEmptyKey, loadFactor=$loadFactor)"
+    }
 }
