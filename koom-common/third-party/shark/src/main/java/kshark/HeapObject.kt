@@ -323,6 +323,7 @@ sealed class HeapObject {
     ) : HeapObject() {
 
         /**
+         * https://www.cnblogs.com/vmax-tam/p/4064395.html
          * Whether this is an instance of a primitive wrapper type.
          */
         val isPrimitiveWrapper: Boolean

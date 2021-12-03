@@ -20,6 +20,7 @@
 
 package com.kwai.koom.javaoom.monitor.analysis
 
+import android.annotation.SuppressLint
 import android.app.IntentService
 import android.content.Context
 import android.content.Intent
@@ -38,18 +39,19 @@ import com.kwai.koom.javaoom.monitor.tracker.model.SystemInfo.procStatus
 import com.kwai.koom.javaoom.monitor.utils.SizeUnit.BYTE
 import com.kwai.koom.javaoom.monitor.utils.SizeUnit.KB
 import kshark.AndroidReferenceMatchers
+import kshark.ApplicationLeak
 import kshark.HeapAnalyzer
 import kshark.HeapAnalyzer.FindLeakInput
 import kshark.HeapGraph
 import kshark.HeapObject
 import kshark.HprofHeapGraph.Companion.openHeapGraph
 import kshark.HprofRecordTag
+import kshark.LibraryLeak
 import kshark.OnAnalysisProgressListener
 import kshark.SharkLog
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
-import java.util.ArrayList
 import java.util.Date
 import java.util.Locale
 import kotlin.system.measureTimeMillis
@@ -226,6 +228,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
         System.exit(0)
     }
 
+    @SuppressLint("SdCardPath")
     private fun buildIndex(hprofFile: String?) {
         if (hprofFile.isNullOrEmpty()) return
 
@@ -258,10 +261,20 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
                 )
             )
         }.also {
-            MonitorLog.i(TAG, "build index cost time: $mHeapGraph")
-            //val file = File("/sdcard/Android/data/com.kwai.koom.demo/cache/heapgraph.txt")
-            //file.writeText(mHeapGraph.toString())
-
+            try {
+                MonitorLog.i(TAG, "build index cost time: 开始")
+                val toJson = Gson().toJson(mHeapGraph)
+//                val toJson = mHeapGraph.toString()
+                MonitorLog.i(TAG, "build index cost time: 生成JSON")
+//                val file = File("/sdcard/Android/data/com.kwai.koom.demo/cache/heapgraph.txt")
+//                MonitorLog.i(TAG, "build index cost time: 写入本地")
+//                file.writeText(toJson)
+                MonitorLog.i(TAG, "build index cost time: 本地本地完成")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                val file = File("/sdcard/Android/data/com.kwai.koom.demo/cache/heapgraph.txt")
+                file.writeText(e.message ?: "error")
+            }
             MonitorLog.i(TAG, "build index cost time: $it")
         }
     }
@@ -337,6 +350,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
         val fragmentHeapClass: HeapObject.HeapClass? = mHeapGraph.findClassByName(ANDROIDX_FRAGMENT_CLASS_NAME)
             ?: mHeapGraph.findClassByName(NATIVE_FRAGMENT_CLASS_NAME)
             ?: mHeapGraph.findClassByName(SUPPORT_FRAGMENT_CLASS_NAME)
+
         val bitmapHeapClass: HeapObject.HeapClass? = mHeapGraph.findClassByName(BITMAP_CLASS_NAME)
         val nativeAllocationHeapClass: HeapObject.HeapClass? = mHeapGraph.findClassByName(NATIVE_ALLOCATION_CLASS_NAME)
         val nativeAllocationThunkHeapClass: HeapObject.HeapClass? =
@@ -350,7 +364,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
 
         //遍历镜像的所有instance
         for (instance in mHeapGraph.instances) {
-            if (instance.isPrimitiveWrapper) {
+            if (instance.isPrimitiveWrapper) { // Byte，Short,Integer,Long,Float.Double,Character,Boolean
                 continue
             }
 
@@ -535,12 +549,9 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
             }
         )
 
-        val findLeakInput = FindLeakInput(
-            mHeapGraph, AndroidReferenceMatchers.appDefaults,
-            false, mutableListOf()
-        )
+        val findLeakInput = FindLeakInput(mHeapGraph, AndroidReferenceMatchers.appDefaults, false, mutableListOf())
 
-        val (applicationLeaks, libraryLeaks) = with(heapAnalyzer) {
+        val (applicationLeaks: List<ApplicationLeak>, libraryLeaks: List<LibraryLeak>) = with(heapAnalyzer) {
             findLeakInput.findLeaks(mLeakingObjectIds)
         }
 
@@ -617,6 +628,8 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
                 referenceType = leakTraceObject.typeName
             })
         }
+
+
         MonitorLog.i(OOM_ANALYSIS_TAG, "=======================================================================")
         MonitorLog.i(
             OOM_ANALYSIS_TAG,

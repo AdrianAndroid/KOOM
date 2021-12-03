@@ -104,6 +104,7 @@ internal class HprofInMemoryIndex private constructor(
         }
     }
 
+    // 找到第一个满足要求的， 没有就返回null
     fun classId(className: String): Long? {
         val internalClassName = if (useForwardSlashClassPackageSeparator) {
             // JVM heap dumps use "/" for package separators (vs "." for Android heap dumps)

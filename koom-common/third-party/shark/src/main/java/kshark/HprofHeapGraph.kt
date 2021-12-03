@@ -20,7 +20,6 @@ import kshark.HeapObject.HeapClass
 import kshark.HeapObject.HeapInstance
 import kshark.HeapObject.HeapObjectArray
 import kshark.HeapObject.HeapPrimitiveArray
-import kshark.HprofHeapGraph.Companion.openHeapGraph
 import kshark.HprofRecord.HeapDumpRecord.ObjectRecord
 import kshark.HprofRecord.HeapDumpRecord.ObjectRecord.ClassDumpRecord
 import kshark.HprofRecord.HeapDumpRecord.ObjectRecord.ClassDumpRecord.FieldRecord
@@ -62,23 +61,17 @@ class HprofHeapGraph internal constructor(
 
     override val context = GraphContext()
 
-    override val objectCount: Int
-        get() = classCount + instanceCount + objectArrayCount + primitiveArrayCount
+    override val objectCount: Int get() = classCount + instanceCount + objectArrayCount + primitiveArrayCount
 
-    override val classCount: Int
-        get() = index.classCount
+    override val classCount: Int get() = index.classCount
 
-    override val instanceCount: Int
-        get() = index.instanceCount
+    override val instanceCount: Int get() = index.instanceCount
 
-    override val objectArrayCount: Int
-        get() = index.objectArrayCount
+    override val objectArrayCount: Int get() = index.objectArrayCount
 
-    override val primitiveArrayCount: Int
-        get() = index.primitiveArrayCount
+    override val primitiveArrayCount: Int get() = index.primitiveArrayCount
 
-    override val gcRoots: List<GcRoot>
-        get() = index.gcRoots()
+    override val gcRoots: List<GcRoot> get() = index.gcRoots()
 
     override val objects: Sequence<HeapObject>
         get() {
