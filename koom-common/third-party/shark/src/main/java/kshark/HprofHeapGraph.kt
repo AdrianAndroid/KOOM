@@ -367,9 +367,9 @@ class HprofHeapGraph internal constructor(
         }
     }
 
-    override fun toString(): String {
-        return "HprofHeapGraph(header=$header, reader=$reader, index=$index, identifierByteSize=$identifierByteSize, context=$context, objectCount=$objectCount, classCount=$classCount, instanceCount=$instanceCount, objectArrayCount=$objectArrayCount, primitiveArrayCount=$primitiveArrayCount, gcRoots=$gcRoots, objects=$objects, classes=$classes, instances=$instances, objectArrays=$objectArrays, primitiveArrays=$primitiveArrays, objectCache=$objectCache, javaLangObjectClass=$javaLangObjectClass, classMap=$classMap)"
-    }
+//    override fun toString(): String {
+//        return "HprofHeapGraph(header=$header, reader=$reader, index=$index, identifierByteSize=$identifierByteSize, context=$context, objectCount=$objectCount, classCount=$classCount, instanceCount=$instanceCount, objectArrayCount=$objectArrayCount, primitiveArrayCount=$primitiveArrayCount, gcRoots=$gcRoots, objects=$objects, classes=$classes, instances=$instances, objectArrays=$objectArrays, primitiveArrays=$primitiveArrays, objectCache=$objectCache, javaLangObjectClass=$javaLangObjectClass, classMap=$classMap)"
+//    }
 
     companion object {
 

@@ -189,11 +189,11 @@ class HeapAnalyzer constructor(private val listener: OnAnalysisProgressListener)
     )
 
     fun FindLeakInput.findLeaks(leakingObjectIds: Set<Long>): LeaksAndUnreachableObjects {
-        val pathFinder = PathFinder(graph, listener, referenceMatchers)
-        val pathFindingResults =
+        val pathFinder: PathFinder = PathFinder(graph, listener, referenceMatchers)
+        val pathFindingResults: PathFindingResults =
             pathFinder.findPathsFromGcRoots(leakingObjectIds, computeRetainedHeapSize)
 
-        val unreachableObjects = findUnreachableObjects(pathFindingResults, leakingObjectIds)
+        val unreachableObjects: List<LeakTraceObject> = findUnreachableObjects(pathFindingResults, leakingObjectIds)
 
         val shortestPaths =
             deduplicateShortestPaths(pathFindingResults.pathsToLeakingObjects)
@@ -216,22 +216,22 @@ class HeapAnalyzer constructor(private val listener: OnAnalysisProgressListener)
         pathFindingResults: PathFindingResults,
         leakingObjectIds: Set<Long>
     ): List<LeakTraceObject> {
-        val reachableLeakingObjectIds =
+        val reachableLeakingObjectIds: Set<Long> =
             pathFindingResults.pathsToLeakingObjects.map { it.objectId }.toSet()
 
-        val unreachableLeakingObjectIds = leakingObjectIds - reachableLeakingObjectIds
+        val unreachableLeakingObjectIds: Set<Long> = leakingObjectIds - reachableLeakingObjectIds
 
-        val unreachableObjectReporters = unreachableLeakingObjectIds.map { objectId ->
+        val unreachableObjectReporters: List<ObjectReporter> = unreachableLeakingObjectIds.map { objectId ->
             ObjectReporter(heapObject = graph.findObjectById(objectId))
         }
 
-        objectInspectors.forEach { inspector ->
+        objectInspectors.forEach { inspector: ObjectInspector ->
             unreachableObjectReporters.forEach { reporter ->
                 inspector.inspect(reporter)
             }
         }
 
-        val unreachableInspectedObjects = unreachableObjectReporters.map { reporter ->
+        val unreachableInspectedObjects: List<InspectedObject> = unreachableObjectReporters.map { reporter ->
             val reason = resolveStatus(reporter, leakingWins = true).let { (status, reason) ->
                 when (status) {
                     LEAKING -> reason
@@ -239,9 +239,7 @@ class HeapAnalyzer constructor(private val listener: OnAnalysisProgressListener)
                     NOT_LEAKING -> "This is a leaking object. Conflicts with $reason"
                 }
             }
-            InspectedObject(
-                reporter.heapObject, LEAKING, reason, reporter.labels
-            )
+            InspectedObject(reporter.heapObject, LEAKING, reason, reporter.labels)
         }
 
         return buildLeakTraceObjects(unreachableInspectedObjects, null)

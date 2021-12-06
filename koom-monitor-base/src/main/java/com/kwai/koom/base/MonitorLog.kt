@@ -81,15 +81,15 @@ object MonitorLog {
 }
 
 interface Log {
-    fun v(tag: String, msg: String) = runIfDebug { android.util.Log.v(tag, msg) }
+    fun v(tag: String, msg: String) = runIfDebug { showLog(tag, msg) { t, m -> android.util.Log.v(t, m) } }
 
-    fun i(tag: String, msg: String) = runIfDebug { android.util.Log.i(tag, msg) }
+    fun i(tag: String, msg: String) = runIfDebug { showLog(tag, msg) { t, m -> android.util.Log.i(t, m) } }
 
-    fun d(tag: String, msg: String) = runIfDebug { android.util.Log.d(tag, msg) }
+    fun d(tag: String, msg: String) = runIfDebug { showLog(tag, msg) { t, m -> android.util.Log.d(t, m) } }
 
-    fun w(tag: String, msg: String) = runIfDebug { android.util.Log.w(tag, msg) }
+    fun w(tag: String, msg: String) = runIfDebug { showLog(tag, msg) { t, m -> android.util.Log.w(t, m) } }
 
-    fun e(tag: String, msg: String) = runIfDebug { android.util.Log.e(tag, msg) }
+    fun e(tag: String, msg: String) = runIfDebug { showLog(tag, msg) { t, m -> android.util.Log.e(t, m) } }
 }
 
 internal inline fun runIfDebug(block: () -> Int): Int {
@@ -97,5 +97,18 @@ internal inline fun runIfDebug(block: () -> Int): Int {
         return block()
     }
 
+    return -1
+}
+
+internal inline fun showLog(tag: String, msg: String, f: (tag: String?, msg: String) -> Int): Int {
+    if (msg.length < 4000) {
+        f(tag, msg)
+    } else {
+        var index = 0
+        while (index < msg.length) {
+            f(tag, if (msg.length > index + 4000) msg.substring(index, 4000) else msg.substring(index))
+            index += 4000
+        }
+    }
     return -1
 }

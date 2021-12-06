@@ -58,6 +58,7 @@ import java.util.LinkedHashMap
  * Finds the shortest path from leaking references to a gc root, first ignoring references
  * identified as "to visit last" and then visiting them as needed if no path is
  * found.
+ * 查找从泄漏引用到 gc 根的最短路径，首先忽略标识为“最后访问”的引用，然后在未找到路径时根据需要访问它们。
  */
 internal class PathFinder(
     private val graph: HeapGraph,
@@ -213,7 +214,8 @@ internal class PathFinder(
 
         // Estimate of how many objects we'll visit. This is a conservative estimate, we should always
         // visit more than that but this limits the number of early array growths.
-        val estimatedVisitedObjects = (graph.instanceCount / 2).coerceAtLeast(4)
+        // 估计我们将访问多少对象。 这是一个保守的估计，我们应该总是访问更多，但这限制了早期阵列增长的数量。
+        val estimatedVisitedObjects: Int = (graph.instanceCount / 2).coerceAtLeast(4)
 
         val state = State(
             leakingObjectIds = leakingObjectIds.toLongScatterSet(),
@@ -256,7 +258,7 @@ internal class PathFinder(
     }
 
     private fun State.findPathsFromGcRoots(): PathFindingResults {
-        enqueueGcRoots()
+        enqueueGcRoots() // GcRoots入队
 
         val shortestPathsToLeakingObjects = mutableListOf<ReferencePathNode>()
         visitingQueue@ while (queuesNotEmpty) {
@@ -298,12 +300,54 @@ internal class PathFinder(
         }
     }
 
+    // ------------------------------------------------------------------------------------------------------------
+    // 可以做GcRoot的Root对象
+    // ------------------------------------------------------------------------------------------------------------
+    // 1. System Class      - Class loaded by bootstrap/system class loader. for example, evertything from the rt.jar
+    //                      - like java.util.*.
+    // ------------------------------------------------------------------------------------------------------------
+    // 2. JNI Local         - Local variable in native code, such as user defined JNI code or JVM code.
+    // ------------------------------------------------------------------------------------------------------------
+    // 3. JNI Global        - Global variable in native code, such as user defined JNI code or JVM internal code.
+    // ------------------------------------------------------------------------------------------------------------
+    // 4. Thread Block      - Object referrred to from a currenty active thread block.
+    // ------------------------------------------------------------------------------------------------------------
+    // 5. Thread            - A started, but not stopped, thread.
+    // ------------------------------------------------------------------------------------------------------------
+    // 6. Busy Monitor      - Everything that has called wait() or notify() or that is a synchronized. For example,
+    //                      - by calling synchronzed(Object) or by entering a synchronized method. Statc method means
+    //                      - class, non-static method means object.
+    // ------------------------------------------------------------------------------------------------------------
+    // 7. Java Local        - Local variable. For example, input parameters or locally created objects of methods
+    //                      - that are still in the stack of a thread.
+    // ------------------------------------------------------------------------------------------------------------
+    // 8. Native Stack      - In or out parameters in native code, such as user defined JNI code or JVM internal code .
+    //                      - This is often the case as many methods have native parts and the objects handled as
+    //                      - method parameters become GC roots. For example, parameters used for file/network I/O
+    //                      - methods or reflection.
+    // ------------------------------------------------------------------------------------------------------------
+    // 9. Finalizable       - An object which is in a queue awaitin its finalizer to be run.
+    // ------------------------------------------------------------------------------------------------------------
+    // 10. Unfinallzed      - An object which  has a finalize method, but has not been finalized and is not  yet on
+    //                      - the finalizer queue.
+    // ------------------------------------------------------------------------------------------------------------
+    // 11. Unreachable      - An object which is unreachable from any other root. but has not been finalized and is
+    //                      - not yet on the finalizer queue.
+    // ------------------------------------------------------------------------------------------------------------
+    // 12. Java Stack Frame - A Java Stack frame, holding local variables. Only generated when the dump is parsed
+    //                      - with the preference set ot treat Java stack frames as objects.
+    // ------------------------------------------------------------------------------------------------------------
+    // 13. Unknown          - An object of unknown root type. Some dumps, such as IBM Portable Heap Dump files. do
+    //                      - not have root information. For these dumps the MAT parser marks objects which are have
+    //                      - no inboundreferences or are unreachable from any other root as roots of this type. This
+    //                      - ensures that MAT retains all the objects in the dump.
+    // ------------------------------------------------------------------------------------------------------------
     private fun State.enqueueGcRoots() {
         val gcRoots = sortedGcRoots()
 
         val threadNames = mutableMapOf<HeapInstance, String>()
         val threadsBySerialNumber = mutableMapOf<Int, Pair<HeapInstance, ThreadObject>>()
-        gcRoots.forEach { (objectRecord, gcRoot) ->
+        gcRoots.forEach { (objectRecord: HeapObject, gcRoot: GcRoot) ->
             when (gcRoot) {
                 is ThreadObject -> {
                     threadsBySerialNumber[gcRoot.threadSerialNumber] = objectRecord.asInstance!! to gcRoot
@@ -316,11 +360,11 @@ internal class PathFinder(
                         enqueue(NormalRootNode(gcRoot.id, gcRoot))
                     } else {
                         val (threadInstance, threadRoot) = threadPair
-                        val threadName = threadNames[threadInstance] ?: {
+                        val threadName = threadNames[threadInstance] ?: run {
                             val name = threadInstance[Thread::class, "name"]?.value?.readAsJavaString() ?: ""
                             threadNames[threadInstance] = name
                             name
-                        }()
+                        }
                         val referenceMatcher = threadNameReferenceMatchers[threadName]
 
                         if (referenceMatcher !is IgnoredReferenceMatcher) {
@@ -379,39 +423,31 @@ internal class PathFinder(
      * built before JavaFrames.
      */
     private fun sortedGcRoots(): List<Pair<HeapObject, GcRoot>> {
+        // 回调函数， 找到GCRoot的名称
         val rootClassName: (HeapObject) -> String = { graphObject ->
             when (graphObject) {
-                is HeapClass -> {
-                    graphObject.name
-                }
-                is HeapInstance -> {
-                    graphObject.instanceClassName
-                }
-                is HeapObjectArray -> {
-                    graphObject.arrayClassName
-                }
-                is HeapPrimitiveArray -> {
-                    graphObject.arrayClassName
-                }
+                is HeapClass -> graphObject.name
+                is HeapInstance -> graphObject.instanceClassName
+                is HeapObjectArray -> graphObject.arrayClassName
+                is HeapPrimitiveArray -> graphObject.arrayClassName
             }
         }
 
-        return graph.gcRoots
-            .filter { gcRoot ->
-                // GC roots sometimes reference objects that don't exist in the heap dump
-                // See https://github.com/square/leakcanary/issues/1516
-                graph.objectExists(gcRoot.id)
+        return graph.gcRoots.filter { gcRoot ->
+            // GC roots sometimes reference objects that don't exist in the heap dump
+            // See https://github.com/square/leakcanary/issues/1516
+            graph.objectExists(gcRoot.id)
+        }.map {
+            graph.findObjectById(it.id) to it
+        }.sortedWith(Comparator { (graphObject1, root1), (graphObject2, root2) ->
+            // Sorting based on pattern name first. In reverse order so that ThreadObject is before JavaLocalPattern
+            val gcRootTypeComparison = root2::class.java.name.compareTo(root1::class.java.name)
+            if (gcRootTypeComparison != 0) {
+                gcRootTypeComparison
+            } else {
+                rootClassName(graphObject1).compareTo(rootClassName(graphObject2))
             }
-            .map { graph.findObjectById(it.id) to it }
-            .sortedWith(Comparator { (graphObject1, root1), (graphObject2, root2) ->
-                // Sorting based on pattern name first. In reverse order so that ThreadObject is before JavaLocalPattern
-                val gcRootTypeComparison = root2::class.java.name.compareTo(root1::class.java.name)
-                if (gcRootTypeComparison != 0) {
-                    gcRootTypeComparison
-                } else {
-                    rootClassName(graphObject1).compareTo(rootClassName(graphObject2))
-                }
-            })
+        })
     }
 
     private fun State.visitClassRecord(

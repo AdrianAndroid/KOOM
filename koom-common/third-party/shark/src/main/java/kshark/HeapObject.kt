@@ -87,6 +87,7 @@ sealed class HeapObject {
         override val objectIndex: Int
     ) : HeapObject() {
 
+
         override val graph: HeapGraph
             get() = hprofGraph
 
@@ -114,14 +115,12 @@ sealed class HeapObject {
          * [HeapObjectArray] (vs single dimension primitive type arrays which are instances of
          * [HeapPrimitiveArray]).
          */
-        val name: String
-            get() = hprofGraph.className(objectId)
+        val name: String get() = hprofGraph.className(objectId)
 
         /**
          * Returns [name] stripped of any string content before the last period (included).
          */
-        val simpleName: String
-            get() = classSimpleName(name)
+        val simpleName: String get() = classSimpleName(name)
 
         /**
          * The total byte size of fields for instances of this class, as registered in the class dump.
@@ -129,20 +128,16 @@ sealed class HeapObject {
          *
          * @see readFieldsByteSize
          */
-        val instanceByteSize: Int
-            get() = indexedObject.instanceSize
+        val instanceByteSize: Int get() = indexedObject.instanceSize
 
-        override val recordSize: Int
-            get() = indexedObject.recordSize.toInt()
+        override val recordSize: Int get() = indexedObject.recordSize.toInt()
 
-        val hasReferenceInstanceFields: Boolean
-            get() = hprofGraph.classDumpHasReferenceFields(indexedObject)
+        val hasReferenceInstanceFields: Boolean get() = hprofGraph.classDumpHasReferenceFields(indexedObject)
 
         /**
          * Returns true if this class is an array class, and false otherwise.
          */
-        val isArrayClass: Boolean
-            get() = name.endsWith("[]")
+        val isArrayClass: Boolean get() = name.endsWith("[]")
 
         val isPrimitiveArrayClass: Boolean
             get() = name in primitiveTypesByPrimitiveArrayClassName
@@ -310,6 +305,10 @@ sealed class HeapObject {
          * @see readStaticField
          */
         operator fun get(fieldName: String) = readStaticField(fieldName)
+
+        override fun toString(): String {
+            return "HeapClass(indexedObject=$indexedObject, objectId=$objectId, objectIndex=$objectIndex, isPrimitiveWrapperClass=$isPrimitiveWrapperClass, name='$name', simpleName='$simpleName', instanceByteSize=$instanceByteSize, recordSize=$recordSize, hasReferenceInstanceFields=$hasReferenceInstanceFields, isArrayClass=$isArrayClass, isPrimitiveArrayClass=$isPrimitiveArrayClass, isObjectArrayClass=$isObjectArrayClass, superclass=$superclass, _classHierarchy=$_classHierarchy, classHierarchy=$classHierarchy, subclasses=$subclasses, instances=$instances, objectArrayInstances=$objectArrayInstances, primitiveArrayInstances=$primitiveArrayInstances, directInstances=$directInstances)"
+        }
     }
 
     /**
