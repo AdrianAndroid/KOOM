@@ -28,8 +28,6 @@ import com.kwai.koom.base.MonitorLog
 import com.kwai.koom.base.isArm64
 import com.kwai.koom.base.loadSoQuietly
 import com.kwai.koom.base.loop.LoopMonitor
-import com.kwai.koom.nativeoom.leakmonitor.LeakMonitor.start
-import com.kwai.koom.nativeoom.leakmonitor.LeakMonitor.stop
 import com.kwai.koom.nativeoom.leakmonitor.allocationtag.AllocationTagLifecycleCallbacks
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -41,7 +39,8 @@ object LeakMonitor : LoopMonitor<LeakMonitorConfig>() {
     @JvmStatic
     private external fun nativeInstallMonitor(
         selectedList: Array<String>,
-        ignoreList: Array<String>, enableLocalSymbolic: Boolean
+        ignoreList: Array<String>,
+        enableLocalSymbolic: Boolean
     ): Boolean
 
     @JvmStatic

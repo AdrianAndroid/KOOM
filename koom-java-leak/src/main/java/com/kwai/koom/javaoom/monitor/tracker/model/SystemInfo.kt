@@ -132,17 +132,23 @@ internal object SystemInfo {
     data class ProcStatus(var thread: Int = 0, var vssInKb: Int = 0, var rssInKb: Int = 0)
 
     data class MemInfo(
-        var totalInKb: Int = 0, var freeInKb: Int = 0, var availableInKb: Int = 0,
-        var IONHeap: Int = 0, var cmaTotal: Int = 0, var rate: Float = 0f
+        var totalInKb: Int = 0,
+        var freeInKb: Int = 0,
+        var availableInKb: Int = 0,
+        var IONHeap: Int = 0,
+        var cmaTotal: Int = 0,
+        var rate: Float = 0f
     )
 
     data class JavaHeap(
-        var max: Long = 0, var total: Long = 0, var free: Long = 0,
-        var used: Long = 0, var rate: Float = 0f
+        var max: Long = 0,
+        var total: Long = 0,
+        var free: Long = 0,
+        var used: Long = 0,
+        var rate: Float = 0f
     )
 
-    private fun Regex.matchValue(s: String) = matchEntire(s.trim())
-        ?.groupValues?.getOrNull(1)?.toInt() ?: 0
+    private fun Regex.matchValue(s: String) = matchEntire(s.trim())?.groupValues?.getOrNull(1)?.toInt() ?: 0
 
     private fun File.forEachLineQuietly(charset: Charset = Charsets.UTF_8, action: (line: String) -> Unit) {
         kotlin.runCatching {

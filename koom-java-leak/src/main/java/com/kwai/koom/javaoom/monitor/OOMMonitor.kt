@@ -126,6 +126,7 @@ object OOMMonitor : LoopMonitor<OOMMonitorConfig>(), LifecycleEventObserver {
     }
 
     override fun call(): LoopState {
+        MonitorLog.i(TAG, "call() method!")
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP
             || Build.VERSION.SDK_INT > Build.VERSION_CODES.R
         ) {
@@ -166,6 +167,7 @@ object OOMMonitor : LoopMonitor<OOMMonitorConfig>(), LifecycleEventObserver {
     }
 
     private fun trackOOM(): LoopState {
+        MonitorLog.i(TAG, "trackOOM()")
         SystemInfo.refresh()
 
         mTrackReasons.clear()

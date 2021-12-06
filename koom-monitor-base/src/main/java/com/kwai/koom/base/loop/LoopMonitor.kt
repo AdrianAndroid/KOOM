@@ -20,6 +20,7 @@ package com.kwai.koom.base.loop
 
 import android.os.Handler
 import com.kwai.koom.base.Monitor
+import com.kwai.koom.base.MonitorLog
 import java.util.concurrent.Callable
 
 abstract class LoopMonitor<C> : Monitor<C>(), Callable<LoopMonitor.LoopState> {
@@ -32,6 +33,7 @@ abstract class LoopMonitor<C> : Monitor<C>(), Callable<LoopMonitor.LoopState> {
 
     private val mLoopRunnable = object : Runnable {
         override fun run() {
+            MonitorLog.e("LoopMonitor", "run() mIsLoopStopped = $mIsLoopStopped")
             if (call() == LoopState.Terminate) {
                 return
             }
