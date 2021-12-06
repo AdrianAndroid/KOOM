@@ -287,6 +287,7 @@ internal class PathFinder(
         )
     }
 
+    // 从加入的队列中，拿出数据
     private fun State.poll(): ReferencePathNode {
         return if (!visitingLast && !toVisitQueue.isEmpty()) {
             val removedNode = toVisitQueue.poll()
@@ -343,7 +344,7 @@ internal class PathFinder(
     //                      - ensures that MAT retains all the objects in the dump.
     // ------------------------------------------------------------------------------------------------------------
     private fun State.enqueueGcRoots() {
-        val gcRoots = sortedGcRoots()
+        val gcRoots: List<Pair<HeapObject, GcRoot>> = sortedGcRoots()
 
         val threadNames = mutableMapOf<HeapInstance, String>()
         val threadsBySerialNumber = mutableMapOf<Int, Pair<HeapInstance, ThreadObject>>()
@@ -665,20 +666,17 @@ internal class PathFinder(
 
 
     @Suppress("ReturnCount")
-    private fun State.enqueue(
-        node: ReferencePathNode
-    ) {
+    private fun State.enqueue(node: ReferencePathNode) {
         if (node.objectId == ValueHolder.NULL_REFERENCE) {
             return
         }
 
-        val visitLast =
-            visitingLast ||
-                node is LibraryLeakNode ||
-                // We deprioritize thread objects because on Lollipop the thread local values are stored
-                // as a field.
-                (node is RootNode && node.gcRoot is ThreadObject) ||
-                (node is NormalNode && node.parent is RootNode && node.parent.gcRoot is JavaFrame)
+        val visitLast = visitingLast ||
+            node is LibraryLeakNode ||
+            // We deprioritize thread objects because on Lollipop the thread local values are stored
+            // as a field.
+            (node is RootNode && node.gcRoot is ThreadObject) ||
+            (node is NormalNode && node.parent is RootNode && node.parent.gcRoot is JavaFrame)
 
         val parentObjectId = if (node is RootNode) {
             ValueHolder.NULL_REFERENCE

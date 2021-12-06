@@ -55,6 +55,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
 class HeapAnalysisService : IntentService("HeapAnalysisService") {
@@ -213,7 +214,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
         }
 
         kotlin.runCatching {
-            //
+            // 从GcRoot到泄漏点的路径
             findPathsToGcRoot()
         }.onFailure {
             it.printStackTrace()
@@ -226,7 +227,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
 
         resultReceiver?.send(AnalysisReceiver.RESULT_CODE_OK, null)
 
-        System.exit(0)
+        exitProcess(0)
     }
 
     @SuppressLint("SdCardPath")
@@ -591,8 +592,8 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
 
             val (gcRootType, referencePath, leakTraceObject) = applicationLeak.leakTraces[0]
 
-            val gcRoot = gcRootType.description
-            val labels = leakTraceObject.labels.toTypedArray()
+            val gcRoot: String = gcRootType.description
+            val labels: Array<String> = leakTraceObject.labels.toTypedArray()
             leakTraceObject.leakingStatusReason = mLeakReasonTable[leakTraceObject.objectId].toString()
 
             MonitorLog.i(
@@ -615,12 +616,12 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
 
             // 添加索引到的trace path
             for (reference in referencePath) {
-                val referenceName = reference.referenceName
-                val clazz = reference.originObject.className
-                val referenceDisplayName = reference.referenceDisplayName
-                val referenceGenericName = reference.referenceGenericName
-                val referenceType = reference.referenceType.toString()
-                val declaredClassName = reference.owningClassName
+                val referenceName: String = reference.referenceName
+                val clazz: String = reference.originObject.className
+                val referenceDisplayName: String = reference.referenceDisplayName
+                val referenceGenericName: String = reference.referenceGenericName
+                val referenceType: String = reference.referenceType.toString()
+                val declaredClassName: String = reference.owningClassName
 
                 MonitorLog.i(
                     OOM_ANALYSIS_TAG, "clazz:" + clazz +
@@ -631,7 +632,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
                         + ", declaredClassName:" + declaredClassName
                 )
 
-                val leakPathItem = HeapReport.GCPath.PathItem().apply {
+                val leakPathItem: HeapReport.GCPath.PathItem = HeapReport.GCPath.PathItem().apply {
                     this.reference = if (referenceDisplayName.startsWith("["))  //数组类型[]
                         clazz
                     else
@@ -666,8 +667,8 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
             )
 
             val (gcRootType, referencePath, leakTraceObject) = libraryLeak.leakTraces[0]
-            val gcRoot = gcRootType.description
-            val labels = leakTraceObject.labels.toTypedArray()
+            val gcRoot: String = gcRootType.description
+            val labels: Array<String> = leakTraceObject.labels.toTypedArray()
             leakTraceObject.leakingStatusReason = mLeakReasonTable[leakTraceObject.objectId].toString()
 
             MonitorLog.i(
@@ -677,7 +678,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
                     + ", leaking reason:" + leakTraceObject.leakingStatusReason
             )
 
-            val leakTraceChainModel = HeapReport.GCPath().apply {
+            val leakTraceChainModel: HeapReport.GCPath = HeapReport.GCPath().apply {
                 this.instanceCount = libraryLeak.leakTraces.size
                 this.leakReason = leakTraceObject.leakingStatusReason
                 this.signature = libraryLeak.signature
@@ -687,12 +688,12 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
 
             // 添加索引到的trace path
             for (reference in referencePath) {
-                val clazz = reference.originObject.className
-                val referenceName = reference.referenceName
-                val referenceDisplayName = reference.referenceDisplayName
-                val referenceGenericName = reference.referenceGenericName
-                val referenceType = reference.referenceType.toString()
-                val declaredClassName = reference.owningClassName
+                val clazz: String = reference.originObject.className
+                val referenceName: String = reference.referenceName
+                val referenceDisplayName: String = reference.referenceDisplayName
+                val referenceGenericName: String = reference.referenceGenericName
+                val referenceType: String = reference.referenceType.toString()
+                val declaredClassName: String = reference.owningClassName
 
                 MonitorLog.i(
                     OOM_ANALYSIS_TAG, "clazz:" + clazz +
@@ -703,7 +704,7 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
                         + ", declaredClassName:" + declaredClassName
                 )
 
-                val leakPathItem = HeapReport.GCPath.PathItem().apply {
+                val leakPathItem: HeapReport.GCPath.PathItem = HeapReport.GCPath.PathItem().apply {
                     this.reference = if (referenceDisplayName.startsWith("["))
                         clazz
                     else  //数组类型[]

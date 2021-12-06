@@ -1,5 +1,6 @@
 package kshark.internal
 
+import kshark.HeapField
 import kshark.HeapGraph
 import kshark.HeapObject.HeapInstance
 
@@ -21,14 +22,13 @@ internal class AndroidNativeSizeMapper(private val graph: HeapGraph) {
         // the CleanerThunk. The hprof does not include the native bytes pointed to.
         graph.findClassByName("sun.misc.Cleaner")?.let { cleanerClass ->
             cleanerClass.directInstances.forEach { cleaner ->
-                val thunkField = cleaner["sun.misc.Cleaner", "thunk"]
-                val thunkId = thunkField?.value?.asNonNullObjectId
-                val referentId =
-                    cleaner["java.lang.ref.Reference", "referent"]?.value?.asNonNullObjectId
+                val thunkField: HeapField? = cleaner["sun.misc.Cleaner", "thunk"]
+                val thunkId: Long? = thunkField?.value?.asNonNullObjectId
+                val referentId: Long? = cleaner["java.lang.ref.Reference", "referent"]?.value?.asNonNullObjectId
                 if (thunkId != null && referentId != null) {
                     val thunkRecord = thunkField.value.asObject
                     if (thunkRecord is HeapInstance && thunkRecord instanceOf "libcore.util.NativeAllocationRegistry\$CleanerThunk") {
-                        val allocationRegistryIdField =
+                        val allocationRegistryIdField: HeapField? =
                             thunkRecord["libcore.util.NativeAllocationRegistry\$CleanerThunk", "this\$0"]
                         if (allocationRegistryIdField != null && allocationRegistryIdField.value.isNonNullReference) {
                             val allocationRegistryRecord = allocationRegistryIdField.value.asObject
