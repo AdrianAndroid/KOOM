@@ -33,56 +33,68 @@
 #define CONFUSE(address) (~(address))
 
 namespace kwai {
-namespace leak_monitor {
-struct AllocRecord {
-  uint64_t index;
-  uint32_t size;
-  intptr_t address;
-  uint32_t num_backtraces;
-  uintptr_t backtrace[kMaxBacktraceSize];
-  char thread_name[kMaxThreadNameLen];
-};
+    namespace leak_monitor {
+        struct AllocRecord {
+            uint64_t index;
+            uint32_t size;
+            intptr_t address;
+            uint32_t num_backtraces;
+            uintptr_t backtrace[kMaxBacktraceSize];
+            char thread_name[kMaxThreadNameLen];
+        };
 
-struct ThreadInfo {
-  char name[kMaxThreadNameLen];
-  ThreadInfo() {
-    if (prctl(PR_GET_NAME, name)) {
-      memcpy(name, "unknown", kMaxThreadNameLen);
-    }
-  }
+        struct ThreadInfo {
+            char name[kMaxThreadNameLen];
 
-  ~ThreadInfo() = default;
-};
+            ThreadInfo() {
+                if (prctl(PR_GET_NAME, name)) {
+                    memcpy(name, "unknown", kMaxThreadNameLen);
+                }
+            }
 
-class LeakMonitor {
- public:
-  static LeakMonitor &GetInstance();
-  bool Install(std::vector<std::string> *selected_list,
-               std::vector<std::string> *ignore_list);
-  void Uninstall();
-  void SetMonitorThreshold(size_t threshold);
-  std::vector<std::shared_ptr<AllocRecord>> GetLeakAllocs();
-  uint64_t CurrentAllocIndex();
-  void OnMonitor(uintptr_t address, size_t size);
-  void RegisterAlloc(uintptr_t address, size_t size);
-  void UnregisterAlloc(uintptr_t address);
+            ~ThreadInfo() = default;
+        };
 
- private:
-  LeakMonitor()
-      : alloc_index_(0),
-        has_install_monitor_(false),
-        live_alloc_records_(),
-        alloc_threshold_(kDefaultAllocThreshold),
-        memory_analyzer_() {}
-  ~LeakMonitor() = default;
-  LeakMonitor(const LeakMonitor &);
-  LeakMonitor &operator=(const LeakMonitor &);
-  std::unique_ptr<MemoryAnalyzer> memory_analyzer_;
-  ConcurrentHashMap<intptr_t, std::shared_ptr<AllocRecord>> live_alloc_records_;
-  std::atomic<uint64_t> alloc_index_;
-  std::atomic<bool> has_install_monitor_;
-  std::atomic<size_t> alloc_threshold_;
-};
-}  // namespace leak_monitor
+        class LeakMonitor {
+        public:
+            static LeakMonitor &GetInstance();
+
+            bool Install(std::vector<std::string> *selected_list,
+                         std::vector<std::string> *ignore_list);
+
+            void Uninstall();
+
+            void SetMonitorThreshold(size_t threshold);
+
+            std::vector<std::shared_ptr<AllocRecord>> GetLeakAllocs();
+
+            uint64_t CurrentAllocIndex();
+
+            void OnMonitor(uintptr_t address, size_t size);
+
+            void RegisterAlloc(uintptr_t address, size_t size);
+
+            void UnregisterAlloc(uintptr_t address);
+
+        private:
+            LeakMonitor() : alloc_index_(0),
+                            has_install_monitor_(false),
+                            live_alloc_records_(),
+                            alloc_threshold_(kDefaultAllocThreshold),
+                            memory_analyzer_() {}
+
+            ~LeakMonitor() = default;
+
+            LeakMonitor(const LeakMonitor &);
+
+            LeakMonitor &operator=(const LeakMonitor &);
+
+            std::unique_ptr<MemoryAnalyzer> memory_analyzer_; // 智能指针
+            ConcurrentHashMap<intptr_t, std::shared_ptr<AllocRecord>> live_alloc_records_;
+            std::atomic<uint64_t> alloc_index_;
+            std::atomic<bool> has_install_monitor_;
+            std::atomic<size_t> alloc_threshold_;
+        };
+    }  // namespace leak_monitor
 }  // namespace kwai
 #endif  // KOOM_NATIVE_OOM_SRC_MAIN_JNI_INCLUDE_LEAK_MONITOR_H_
