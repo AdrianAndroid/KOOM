@@ -24,31 +24,33 @@ import java.util.List;
 import android.content.Context;
 
 public abstract class LeakMaker<T> {
-  List<T> uselessObjectList = new ArrayList<>();
+    List<T> uselessObjectList = new ArrayList<>();
 
-  abstract void startLeak(Context context);
+    abstract void startLeak(Context context);
 
-  private static List<LeakMaker> leakMakerList = new ArrayList<>();
+    private static final List<LeakMaker> leakMakerList = new ArrayList<>();
 
-  // 制作内存泄漏
-  public static void makeLeak(Context context) {
-    leakMakerList.add(new ActivityLeakMaker());
-    leakMakerList.add(new BitmapLeakMaker());
-    leakMakerList.add(new ByteArrayLeakMaker());
-    leakMakerList.add(new FragmentLeakMaker());
-    leakMakerList.add(new StringLeakMaker());
-    for (LeakMaker leakMaker : leakMakerList) {
-      leakMaker.startLeak(context);
-    }
-
-    for (int i = 0; i < 700; i++) {
-      new Thread(() -> {
-        try {
-          Thread.sleep(200_000);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+    // 制作内存泄漏
+    public static void makeLeak(Context context) {
+        leakMakerList.add(new ActivityHandlerLeakMaker());
+        leakMakerList.add(new ActivitySingletonLeakMaker());
+        leakMakerList.add(new ActivityLeakMaker());
+        leakMakerList.add(new BitmapLeakMaker());
+        leakMakerList.add(new ByteArrayLeakMaker());
+        leakMakerList.add(new FragmentLeakMaker());
+        leakMakerList.add(new StringLeakMaker());
+        for (LeakMaker leakMaker : leakMakerList) {
+            leakMaker.startLeak(context);
         }
-      }).start();
+
+        for (int i = 0; i < 700; i++) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(200_000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
     }
-  }
 }

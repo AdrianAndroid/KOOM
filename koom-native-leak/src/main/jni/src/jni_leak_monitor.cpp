@@ -196,15 +196,19 @@ namespace kwai {
         // env 虚拟机引用
         // jclass 调用的类
         // leak_record_map 存储结果的map
-        static void GetLeakAllocs(JNIEnv *env, jclass, jobject leak_record_map) {
+        static void GetLeakAllocs(JNIEnv *env, jclass, jobject leak_record_map) { //(Ljava/util/Map;)V
             ScopedLocalRef<jclass> map_class(env, env->GetObjectClass(leak_record_map)); // 自动销毁指针
+
+            // 得到put方法
             jmethodID put_method;
             GET_METHOD_ID(put_method, map_class.get(), "put",
                           "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-            // 创建一个容器，得到所有泄漏的地方
+
+            // 创建一个容器，得到所有泄漏的地方, core dump
             std::vector<std::shared_ptr<AllocRecord>> leak_allocs = LeakMonitor::GetInstance().GetLeakAllocs();
 
-            for (auto &leak_alloc : leak_allocs) {
+            for (auto &leak_alloc : leak_allocs) { // 遍历整个vector
+                // leac_alloc : shared_ptr<AllocRecord>
                 if (leak_alloc->num_backtraces <= kNumDropFrame) {
                     continue;
                 }
@@ -213,8 +217,7 @@ namespace kwai {
                 std::vector<std::pair<jlong, std::string>> frames;
                 for (int i = 0; i < leak_alloc->num_backtraces; i++) {
                     uintptr_t offset;
-                    auto *map_entry = g_memory_map.CalculateRelPc(
-                            leak_alloc->backtrace[i + kNumDropFrame], &offset);
+                    auto *map_entry = g_memory_map.CalculateRelPc(leak_alloc->backtrace[i + kNumDropFrame], &offset);
 
                     if (!map_entry) {
                         continue;
@@ -225,11 +228,10 @@ namespace kwai {
                         break;
                     }
 
-                    std::string symbol_info =
-                            g_enable_local_symbolic
-                            ? g_memory_map.FormatSymbol(
-                                    map_entry, leak_alloc->backtrace[i + kNumDropFrame])
-                            : basename(map_entry->name.c_str());
+                    std::string symbol_info = g_enable_local_symbolic ? g_memory_map.FormatSymbol(
+                            map_entry,
+                            leak_alloc->backtrace[i + kNumDropFrame]) : basename(map_entry->name.c_str()
+                    );
                     frames.emplace_back(static_cast<jlong>(offset), symbol_info);
                 }
 
@@ -238,17 +240,18 @@ namespace kwai {
                 }
 
                 char address[sizeof(uintptr_t) * 2 + 1];
-                snprintf(address, sizeof(uintptr_t) * 2 + 1, "%lx",
-                         CONFUSE(leak_alloc->address));
+                snprintf(address, sizeof(uintptr_t) * 2 + 1, "%lx", CONFUSE(leak_alloc->address));
                 ScopedLocalRef<jstring> memory_address(env, env->NewStringUTF(address));
                 ScopedLocalRef<jobjectArray> frames_ref(env, BuildFrames(env, frames));
-                ScopedLocalRef<jobject> leak_record_ref(
-                        env, BuildLeakRecord(env, leak_alloc->index, leak_alloc->size,
-                                             leak_alloc->thread_name, frames_ref.get()));
+                ScopedLocalRef<jobject> leak_record_ref(env, BuildLeakRecord(env,
+                                                                             leak_alloc->index,
+                                                                             leak_alloc->size,
+                                                                             leak_alloc->thread_name,
+                                                                             frames_ref.get()));
                 ScopedLocalRef<jobject> no_use(
                         env,
-                        env->CallObjectMethod(leak_record_map, put_method, memory_address.get(),
-                                              leak_record_ref.get()));
+                        env->CallObjectMethod(leak_record_map, put_method, memory_address.get(), leak_record_ref.get())
+                );
             }
         }
 

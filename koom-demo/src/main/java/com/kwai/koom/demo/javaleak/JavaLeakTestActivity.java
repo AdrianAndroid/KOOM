@@ -43,7 +43,7 @@ public class JavaLeakTestActivity extends AppCompatActivity {
                 /*
                  * Make some leaks for test!
                  */
-                // LeakMaker.makeLeak(this);
+                LeakMaker.makeLeak(this);
                 break;
 
             case R.id.btn_hprof_dump:

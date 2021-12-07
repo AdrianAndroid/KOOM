@@ -21,7 +21,9 @@ package com.kwai.koom.demo.javaleak.test;
 import android.content.Context;
 import android.graphics.Bitmap;
 
+// 外部类持有了Bitmap的对象，导致无法分配
 public class BitmapLeakMaker extends LeakMaker<Bitmap> {
+
 
   @Override
   public void startLeak(Context context) {

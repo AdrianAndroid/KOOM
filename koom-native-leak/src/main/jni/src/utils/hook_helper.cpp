@@ -30,9 +30,10 @@ std::vector<const std::string> HookHelper::ignore_pattern_;
 std::vector<std::pair<const std::string, void *const>> HookHelper::methods_;
 
 bool HookHelper::HookMethods(
-        std::vector<const std::string> &register_pattern,
-        std::vector<const std::string> &ignore_pattern,
-        std::vector<std::pair<const std::string, void *const>> &methods) {
+        std::vector<const std::string> &register_pattern,               // 需要注册的pattern
+        std::vector<const std::string> &ignore_pattern,                 // 需要忽略的pattern
+        std::vector<std::pair<const std::string, void *const>> &methods // 回调方法
+) {
     if (register_pattern.empty() || methods.empty()) {
         ALOGE("Hook nothing");
         return false;

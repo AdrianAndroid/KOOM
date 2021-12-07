@@ -39,7 +39,7 @@ namespace kwai {
         static const char *kGetUnreachableMemoryStringSymbolBelowO = "_Z26GetUnreachableMemoryStringbm";
 
         MemoryAnalyzer::MemoryAnalyzer() : get_unreachable_fn_(nullptr), handle_(nullptr) {
-            auto handle = kwai::linker::DlFcn::dlopen(kLibMemUnreachableName, RTLD_NOW);
+            auto handle = kwai::linker::DlFcn::dlopen(kLibMemUnreachableName, RTLD_NOW); // 动态链接
             if (!handle) {
                 ALOGE("dlopen %s error: %s", kLibMemUnreachableName, dlerror());
                 return;
@@ -66,7 +66,7 @@ namespace kwai {
 
         // 找到不能达到的内存
         std::vector<std::pair<uintptr_t, size_t>> MemoryAnalyzer::CollectUnreachableMem() {
-            std::vector<std::pair<uintptr_t, size_t>> unreachable_mem;
+            std::vector<std::pair<uintptr_t, size_t>> unreachable_mem; // vector数组
 
             if (!IsValid()) {
                 ALOGE("MemoryAnalyzer NOT valid");
@@ -88,12 +88,12 @@ namespace kwai {
             std::regex filter_regex("[0-9]+ bytes unreachable at [A-Za-z0-9]+");
             std::sregex_iterator unreachable_begin(unreachable_memory.begin(), unreachable_memory.end(), filter_regex);
             std::sregex_iterator unreachable_end;
+            // 把转储文件，每一行都解析出来
             for (; unreachable_begin != unreachable_end; ++unreachable_begin) {
                 std::string line = unreachable_begin->str();
-                auto address =
-                        std::stoul(line.substr(line.find_last_of(' ') + 1,
-                                               line.length() - line.find_last_of(' ') - 1),
-                                   0, 16);
+                auto address = std::stoul(
+                        line.substr(line.find_last_of(' ') + 1, line.length() - line.find_last_of(' ') - 1),
+                        0, 16);
                 auto size = std::stoul(line.substr(0, line.find_first_of(' ')));
                 unreachable_mem.push_back(std::pair<uintptr_t, size_t>(address, size));
             }

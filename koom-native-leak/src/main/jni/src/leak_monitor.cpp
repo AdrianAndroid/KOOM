@@ -61,15 +61,13 @@ namespace kwai {
         HOOK(void, free, void *ptr) {
             free(ptr);
             if (ptr) {
-                LeakMonitor::GetInstance().UnregisterAlloc(
-                        reinterpret_cast<uintptr_t>(ptr));
+                LeakMonitor::GetInstance().UnregisterAlloc(reinterpret_cast<uintptr_t>(ptr));
             }
         }
 
         HOOK(void *, malloc, size_t size) {
             auto result = malloc(size);
-            LeakMonitor::GetInstance().OnMonitor(reinterpret_cast<intptr_t>(result),
-                                                 size);
+            LeakMonitor::GetInstance().OnMonitor(reinterpret_cast<intptr_t>(result), size);
             CLEAR_MEMORY(result, size);
             return result;
         }
@@ -77,33 +75,28 @@ namespace kwai {
         HOOK(void *, realloc, void *ptr, size_t size) {
             auto result = realloc(ptr, size);
             if (ptr != nullptr) {
-                LeakMonitor::GetInstance().UnregisterAlloc(
-                        reinterpret_cast<uintptr_t>(ptr));
+                LeakMonitor::GetInstance().UnregisterAlloc(reinterpret_cast<uintptr_t>(ptr));
             }
-            LeakMonitor::GetInstance().OnMonitor(reinterpret_cast<intptr_t>(result),
-                                                 size);
+            LeakMonitor::GetInstance().OnMonitor(reinterpret_cast<intptr_t>(result), size);
             return result;
         }
 
         HOOK(void *, calloc, size_t item_count, size_t item_size) {
             auto result = calloc(item_count, item_size);
-            LeakMonitor::GetInstance().OnMonitor(reinterpret_cast<intptr_t>(result),
-                                                 item_count * item_size);
+            LeakMonitor::GetInstance().OnMonitor(reinterpret_cast<intptr_t>(result), item_count * item_size);
             return result;
         }
 
         HOOK(void *, memalign, size_t alignment, size_t byte_count) {
             auto result = memalign(alignment, byte_count);
-            LeakMonitor::GetInstance().OnMonitor(reinterpret_cast<intptr_t>(result),
-                                                 byte_count);
+            LeakMonitor::GetInstance().OnMonitor(reinterpret_cast<intptr_t>(result), byte_count);
             CLEAR_MEMORY(result, byte_count);
             return result;
         }
 
         HOOK(int, posix_memalign, void **memptr, size_t alignment, size_t size) {
             auto result = posix_memalign(memptr, alignment, size);
-            LeakMonitor::GetInstance().OnMonitor(reinterpret_cast<intptr_t>(*memptr),
-                                                 size);
+            LeakMonitor::GetInstance().OnMonitor(reinterpret_cast<intptr_t>(*memptr), size);
             CLEAR_MEMORY(*memptr, size);
             return result;
         }
@@ -145,12 +138,13 @@ namespace kwai {
 
             // 通过xhook，把下面关键字HOOK住
             std::vector<std::pair<const std::string, void *const>> hook_entries = {
-                    std::make_pair("malloc", reinterpret_cast<void *>(WRAP(malloc))),
-                    std::make_pair("realloc", reinterpret_cast<void *>(WRAP(realloc))),
-                    std::make_pair("calloc", reinterpret_cast<void *>(WRAP(calloc))),
-                    std::make_pair("memalign", reinterpret_cast<void *>(WRAP(memalign))),
-                    std::make_pair("posix_memalign", reinterpret_cast<void *>(WRAP(posix_memalign))),
-                    std::make_pair("free", reinterpret_cast<void *>(WRAP(free)))
+                    std::make_pair("malloc", reinterpret_cast<void *>(WRAP(malloc))),   // mallocMonitor
+                    std::make_pair("realloc", reinterpret_cast<void *>(WRAP(realloc))), // reallocMonitor
+                    std::make_pair("calloc", reinterpret_cast<void *>(WRAP(calloc))),   // callocMonitor
+                    std::make_pair("memalign", reinterpret_cast<void *>(WRAP(memalign))),// memalignMonitor
+                    std::make_pair("posix_memalign",
+                                   reinterpret_cast<void *>(WRAP(posix_memalign))), //posix_memalignMonitor
+                    std::make_pair("free", reinterpret_cast<void *>(WRAP(free))) // freeMonitor
             };
 
             // HOOK methods 之前
@@ -181,13 +175,16 @@ namespace kwai {
 
         std::vector<std::shared_ptr<AllocRecord>> LeakMonitor::GetLeakAllocs() {
             KCHECK(has_install_monitor_);
+            // core dump, 里面有大量的数据
             auto unreachable_allocs = memory_analyzer_->CollectUnreachableMem();
+            // 自己监听的
             std::vector<std::shared_ptr<AllocRecord>> live_allocs;
+            // 保存泄漏的
             std::vector<std::shared_ptr<AllocRecord>> leak_allocs;
 
             // Collect live memory blocks
             auto collect_func = [&](std::shared_ptr<AllocRecord> &alloc_info) -> void {
-                live_allocs.push_back(alloc_info);
+                live_allocs.push_back(alloc_info); // 把今天的对象放到这个集合里
             };
             live_alloc_records_.Dump(collect_func);
 
@@ -224,12 +221,12 @@ namespace kwai {
             if (!address || !size) {
                 return;
             }
-
+            // lambda
             auto unwind_backtrace = [](uintptr_t *frames, uint32_t *frame_count) {
                 *frame_count = StackTrace::FastUnwind(frames, kMaxBacktraceSize);
             };
 
-            thread_local ThreadInfo thread_info;
+            thread_local ThreadInfo thread_info; // 每个线程共有
             auto alloc_record = std::make_shared<AllocRecord>();
             alloc_record->address = CONFUSE(address);
             alloc_record->size = size;
@@ -244,8 +241,7 @@ namespace kwai {
         }
 
         ALWAYS_INLINE void LeakMonitor::OnMonitor(uintptr_t address, size_t size) {
-            if (!has_install_monitor_ || !address ||
-                size < alloc_threshold_.load(std::memory_order_relaxed)) {
+            if (!has_install_monitor_ || !address || size < alloc_threshold_.load(std::memory_order_relaxed)) {
                 return;
             }
 
