@@ -313,8 +313,8 @@ class HeapAnalysisService : IntentService("HeapAnalysisService") {
             fdList = createDumpFile(fdDumpDir).takeIf { it.exists() }?.readLines()
             threadList = createDumpFile(threadDumpDir).takeIf { it.exists() }?.readLines()
 
-            createDumpFile(fdDumpDir).delete()
-            createDumpFile(threadDumpDir).delete()
+//            createDumpFile(fdDumpDir).delete()
+//            createDumpFile(threadDumpDir).delete()
         }
     }
 

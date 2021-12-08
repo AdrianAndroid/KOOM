@@ -54,8 +54,11 @@ object OOMMonitor : LoopMonitor<OOMMonitorConfig>(), LifecycleEventObserver {
     private const val TAG = "OOMMonitor"
 
     private val mOOMTrackers = mutableListOf(
-        HeapOOMTracker(), ThreadOOMTracker(), FdOOMTracker(),
-        PhysicalMemoryOOMTracker(), FastHugeMemoryOOMTracker()
+        HeapOOMTracker(),  // 堆
+        ThreadOOMTracker(),// 线程
+        FdOOMTracker(),    // 正在使用的文件
+        PhysicalMemoryOOMTracker(), //内存
+        FastHugeMemoryOOMTracker()
     )
     private val mTrackReasons = mutableListOf<String>()
 

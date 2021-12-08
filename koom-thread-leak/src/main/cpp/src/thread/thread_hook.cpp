@@ -69,7 +69,7 @@ void ThreadHooker::HookLibs(std::set<std::string> &libs, int source) {
   pthread_mutex_lock(&DlopenCb::hook_mutex);
   xhook_clear();
   for (const auto &lib : libs) {
-    hooked |= ThreadHooker::RegisterSo(lib, source);
+    hooked |= ThreadHooker::RegisterSo(lib, source); //HOOK住Thread的创建销毁
   }
   if (hooked) {
     int result = xhook_refresh(0);

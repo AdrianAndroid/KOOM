@@ -72,10 +72,12 @@ object ThreadMonitor : LoopMonitor<ThreadMonitorConfig>() {
             monitorConfig.listener?.onError("not support P below or R above now!")
             return false
         }
+        // 是否是64位cpu
         if (!isArm64()) {
             monitorConfig.listener?.onError("support arm64 only!")
             return false
         }
+        // 是否已经加载
         if (loadSoQuietly("koom-thread")) {
             MonitorLog.i(TAG, "loadLibrary success")
         } else {

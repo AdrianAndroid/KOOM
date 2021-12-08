@@ -74,6 +74,7 @@ class FdOOMTracker : OOMTracker() {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return
 
+        ///proc/self/fd注重从进程角度说正在使用的文件描述符有哪些，
         val fdNames = runCatching { File("/proc/self/fd").listFiles() }
             .getOrElse {
                 MonitorLog.i(TAG, "/proc/self/fd child files is empty")

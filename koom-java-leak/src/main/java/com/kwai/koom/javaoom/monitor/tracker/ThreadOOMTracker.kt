@@ -23,6 +23,23 @@ import com.kwai.koom.javaoom.monitor.OOMFileManager
 import com.kwai.koom.javaoom.monitor.tracker.model.SystemInfo
 import java.io.File
 
+/* java获取线程
+private void getAllThread() {
+    Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
+    Log.d(TAG, "线程总数：" + allStackTraces.size());
+    for (Map.Entry<Thread, StackTraceElement[]> stackTrace : allStackTraces.entrySet()) {
+        Thread thread = (Thread) stackTrace.getKey();
+        Log.d(TAG, "线程：" + thread.getName() + ",id=" + thread.getId() + ",state=" + thread.getState());
+        StackTraceElement[] stack = (StackTraceElement[]) stackTrace.getValue();
+        String strStackTrace = "堆栈：";
+        for (StackTraceElement stackTraceElement : stack) {
+            strStackTrace += stackTraceElement.toString() + "\n";
+        }
+        Log.d(TAG, strStackTrace);
+    }
+}
+ */
+// 追踪所有的线程
 class ThreadOOMTracker : OOMTracker() {
     companion object {
         private const val TAG = "OOMMonitor_ThreadOOMTracker"
@@ -74,6 +91,7 @@ class ThreadOOMTracker : OOMTracker() {
 
         if (mOverThresholdCount > monitorConfig.maxOverThresholdCount) return
 
+        // 当前运行的所有线程
         val threadNames = runCatching { File("/proc/self/task").listFiles() }
             .getOrElse {
                 MonitorLog.i(TAG, "/proc/self/task child files is empty")

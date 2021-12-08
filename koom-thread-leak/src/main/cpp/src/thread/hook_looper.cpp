@@ -58,8 +58,8 @@ void HookLooper::handle(int what, void *data) {
       break;
     }
     case ACTION_REFRESH: {
-      koom::Log::info(looper_tag, "Refresh");
-      auto info = static_cast<SimpleHookInfo *>(data);
+      koom::Log::info(looper_tag, "Refresh"); // 打印log
+      auto info = static_cast<SimpleHookInfo *>(data); // 静态转换
       holder->ReportThreadLeak(info->time);
       delete info;
       break;

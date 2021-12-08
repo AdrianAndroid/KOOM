@@ -68,8 +68,8 @@ void Stop() {
 }
 
 void Refresh() {
-  auto info = new SimpleHookInfo(Util::CurrentTimeNs());
-  sHookLooper->post(ACTION_REFRESH, info);
+  auto info = new SimpleHookInfo(Util::CurrentTimeNs()); // 这里就存放了一个时间
+  sHookLooper->post(ACTION_REFRESH, info); //加入到队列
 }
 
 JNIEnv *GetEnv(bool doAttach) {
