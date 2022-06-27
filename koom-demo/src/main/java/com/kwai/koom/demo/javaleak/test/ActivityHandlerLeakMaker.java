@@ -17,10 +17,8 @@ import androidx.appcompat.app.AppCompatActivity;
 public class ActivityHandlerLeakMaker extends LeakMaker<Activity> {
     @Override
     void startLeak(Context context) {
-        for (int i = 0; i < 4; ++i) {
-            Intent intent = new Intent(context, HandlerActivity.class);
-            context.startActivity(intent);
-        }
+        Intent intent = new Intent(context, HandlerActivity.class);
+        context.startActivity(intent);
     }
 
     public static class HandlerActivity extends AppCompatActivity {
@@ -36,8 +34,7 @@ public class ActivityHandlerLeakMaker extends LeakMaker<Activity> {
 
                 }
             }, 2 * 60 * 60 * 1000);
-
-            this.finish();
+            findViewById(android.R.id.content).post(this::finish);
         }
     }
 }

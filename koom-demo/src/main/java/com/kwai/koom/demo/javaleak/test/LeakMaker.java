@@ -32,13 +32,13 @@ public abstract class LeakMaker<T> {
 
     // 制作内存泄漏
     public static void makeLeak(Context context) {
-        leakMakerList.add(new ActivityHandlerLeakMaker());
-        leakMakerList.add(new ActivitySingletonLeakMaker());
+//        leakMakerList.add(new ActivityHandlerLeakMaker());
+//        leakMakerList.add(new ActivitySingletonLeakMaker());
         leakMakerList.add(new ActivityLeakMaker());
-        leakMakerList.add(new BitmapLeakMaker());
-        leakMakerList.add(new ByteArrayLeakMaker());
-        leakMakerList.add(new FragmentLeakMaker());
-        leakMakerList.add(new StringLeakMaker());
+//        leakMakerList.add(new BitmapLeakMaker());
+//        leakMakerList.add(new ByteArrayLeakMaker());
+//        leakMakerList.add(new FragmentLeakMaker());
+//        leakMakerList.add(new StringLeakMaker());
         for (LeakMaker leakMaker : leakMakerList) {
             leakMaker.startLeak(context);
         }
